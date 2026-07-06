@@ -6,6 +6,7 @@ import type {
   Tag,
   Wallet,
 } from "@prisma/client";
+import { hashPassword } from "better-auth/crypto";
 
 import { prisma } from "../src/shared/lib/prisma.js";
 
@@ -223,8 +224,16 @@ const main = async () => {
   const user = await prisma.user.create({
     data: {
       name: "Usuário Dev Nummus",
-      email: "dev@nummus.com",
+      email: "admin@admin.com",
       emailVerified: true,
+    },
+  });
+  await prisma.account.create({
+    data: {
+      accountId: user.id,
+      providerId: "credential",
+      userId: user.id,
+      password: await hashPassword("adminadmin"),
     },
   });
   console.log(`✅ Created user ${user.email}`);
