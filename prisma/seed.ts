@@ -198,9 +198,9 @@ const cleanDatabase = async () => {
   await prisma.netWorthSnapshot.deleteMany();
   await prisma.creditCardInvoice.deleteMany();
   await prisma.installmentPlan.deleteMany();
+  await prisma.openFinanceConnection.deleteMany();
   await prisma.creditCard.deleteMany();
   await prisma.investment.deleteMany();
-  await prisma.openFinanceConnection.deleteMany();
   await prisma.wallet.deleteMany();
   await prisma.category.deleteMany({ where: { parentId: { not: null } } });
   await prisma.category.deleteMany();
