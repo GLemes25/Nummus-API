@@ -19,7 +19,7 @@ COPY prisma ./prisma/
 # Injeta uma URL falsa temporária ANTES do install: o script "postinstall"
 # do package.json roda "prisma generate" automaticamente, e o Prisma exige
 # DATABASE_URL só para carregar a config (a URL real é injetada em runtime
-# via secrets do Fly)
+# via variáveis de ambiente do docker-compose)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 # Instala todas as dependências (o postinstall já gera o client do Prisma)
@@ -31,7 +31,7 @@ COPY . .
 # Compila o TypeScript (gera dist/server.js)
 RUN pnpm build
 
-# Expõe a porta que o Fly.io espera
+# Expõe a porta usada pela aplicação
 EXPOSE 8080
 
 # Inicia a aplicação (usa o script "start" do package.json)
