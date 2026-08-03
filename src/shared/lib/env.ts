@@ -11,6 +11,7 @@ const envSchema = z.object({
   USE_DEV_DATABASE: z.coerce.boolean().default(false),
   API_BASE_URL: z.url(),
   WEB_APP_BASE_URL: z.url(),
+  COOKIE_DOMAIN: z.string().optional(),
   BETTER_AUTH_SECRET: z.string().min(32),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
