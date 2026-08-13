@@ -35,16 +35,18 @@ export const transactionListItemSchema = z.object({
   description: z.string(),
   walletId: z.string().nullable(),
   creditCardId: z.string().nullable(),
-  categoryId: z.string(),
+  categoryId: z.string().nullable(),
   userId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  category: z.object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string(),
-    icon: z.string(),
-  }),
+  category: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      color: z.string(),
+      icon: z.string(),
+    })
+    .nullable(),
   wallet: z
     .object({
       id: z.string(),

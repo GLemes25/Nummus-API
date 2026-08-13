@@ -7,7 +7,7 @@ type CreateTransactionData = {
   date: Date;
   description: string;
   walletId: string;
-  categoryId: string;
+  categoryId: string | null;
   userId: string;
   newBalance: number;
 };
@@ -18,7 +18,7 @@ type CreateWithInvoiceData = {
   date: Date;
   description: string;
   creditCardId: string;
-  categoryId: string;
+  categoryId: string | null;
   userId: string;
   periodStart: Date;
   periodEnd: Date;
@@ -32,7 +32,7 @@ type UpdateTransactionData = {
   date: Date;
   description: string;
   walletId: string | null;
-  categoryId: string;
+  categoryId: string | null;
 };
 
 type WalletBalanceUpdate = {

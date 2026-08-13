@@ -318,8 +318,8 @@ model Transaction {
   wallet       Wallet?    @relation(fields: [walletId], references: [id])
   creditCardId String?
   creditCard   CreditCard? @relation(fields: [creditCardId], references: [id])
-  categoryId   String
-  category     Category   @relation(fields: [categoryId], references: [id])
+  categoryId   String?
+  category     Category?  @relation(fields: [categoryId], references: [id])
   userId       String
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
