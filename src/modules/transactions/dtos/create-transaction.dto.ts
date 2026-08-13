@@ -16,9 +16,7 @@ export const transactionBaseSchema = z.object({
     .min(1, "A descrição é obrigatória"),
   walletId: z.string().min(1, "O identificador da carteira é inválido").optional(),
   creditCardId: z.string().min(1, "O identificador do cartão de crédito é inválido").optional(),
-  categoryId: z
-    .string({ error: "A categoria é obrigatória" })
-    .min(1, "A categoria é obrigatória"),
+  categoryId: z.string().min(1, "O identificador da categoria é inválido").optional(),
 });
 
 export const createTransactionSchema = transactionBaseSchema
@@ -41,7 +39,7 @@ export const transactionResponseSchema = z.object({
   description: z.string(),
   walletId: z.string().nullable(),
   creditCardId: z.string().nullable(),
-  categoryId: z.string(),
+  categoryId: z.string().nullable(),
   userId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),

@@ -1,14 +1,19 @@
+import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyReply, FastifyRequest } from "fastify";
+
+import { auth } from "../../lib/auth.js";
 
 export const verifyAuth = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
-  const token = request.headers.authorization?.replace("Bearer ", "");
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(request.headers),
+  });
 
-  if (!token) {
+  if (!session) {
     return reply.status(401).send({ error: "Unauthorized" });
   }
 
-  request.userId = "user-test-id";
+  request.userId = session.user.id;
 };

@@ -11,7 +11,17 @@ export const auth = betterAuth({
   }),
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.API_BASE_URL,
-  trustedOrigins: [env.WEB_APP_BASE_URL],
+  trustedOrigins: [env.WEB_APP_BASE_URL, "http://localhost:3000"],
+  advanced: {
+    crossSubDomainCookies: {
+      enabled: !!env.COOKIE_DOMAIN,
+      ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
+    },
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
   emailAndPassword: {
     enabled: true,
   },

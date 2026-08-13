@@ -10,12 +10,14 @@ import { walletRepository } from "../repositories/wallet.repository.js";
 import { makeCreateWalletUseCase } from "../use-cases/create-wallet.use-case.js";
 import { makeGetWalletsUseCase } from "../use-cases/get-wallets.use-case.js";
 import { makeUpdateWalletUseCase } from "../use-cases/update-wallet.use-case.js";
+import { makeDeleteWalletUseCase } from "../use-cases/delete-wallet.use-case.js";
 import { presentWallet } from "./presenters/wallet.presenter.js";
 
 export const walletRoutes = async (app: FastifyInstance) => {
   const createWallet = makeCreateWalletUseCase(walletRepository);
   const getWallets = makeGetWalletsUseCase(walletRepository);
   const updateWallet = makeUpdateWalletUseCase(walletRepository);
+  const deleteWallet = makeDeleteWalletUseCase(walletRepository);
 
   app.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",
@@ -80,6 +82,25 @@ export const walletRoutes = async (app: FastifyInstance) => {
         data: request.body,
       });
       return reply.status(200).send(presentWallet(wallet));
+    },
+  });
+
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: "DELETE",
+    url: "/:id",
+    preHandler: [verifyAuth],
+    schema: {
+      tags: ["Wallets"],
+      params: z.object({ id: z.string() }),
+      response: {
+        204: z.void(),
+        403: appErrorResponseSchema,
+        404: appErrorResponseSchema,
+      },
+    },
+    handler: async (request, reply) => {
+      await deleteWallet({ walletId: request.params.id, userId: request.userId });
+      return reply.status(204).send();
     },
   });
 };

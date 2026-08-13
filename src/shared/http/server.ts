@@ -80,6 +80,7 @@ export const buildApp = async () => {
   await app.register(fastifyCors, {
     origin: [env.WEB_APP_BASE_URL, "http://localhost:3000"],
     credentials: true,
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
   });
 
   await app.register(fastifyRateLimit, {

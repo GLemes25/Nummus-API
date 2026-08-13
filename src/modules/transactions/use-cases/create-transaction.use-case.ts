@@ -39,13 +39,15 @@ export const makeCreateTransactionUseCase = (
   findCreditCard: FindCreditCard
 ) => {
   return async (data: CreateTransactionInput) => {
-    const category = await findCategory(data.categoryId);
-    if (!category) {
-      throw makeAppError({
-        code: "CATEGORY_NOT_FOUND",
-        message: "Categoria não encontrada",
-        statusCode: 404,
-      });
+    if (data.categoryId) {
+      const category = await findCategory(data.categoryId);
+      if (!category) {
+        throw makeAppError({
+          code: "CATEGORY_NOT_FOUND",
+          message: "Categoria não encontrada",
+          statusCode: 404,
+        });
+      }
     }
 
     if (data.paymentMethod === "CREDIT_CARD") {
@@ -70,7 +72,7 @@ export const makeCreateTransactionUseCase = (
         date: data.date,
         description: data.description,
         creditCardId: data.creditCardId!,
-        categoryId: data.categoryId,
+        categoryId: data.categoryId ?? null,
         userId: data.userId,
         periodStart,
         periodEnd,
@@ -109,7 +111,7 @@ export const makeCreateTransactionUseCase = (
       date: data.date,
       description: data.description,
       walletId: data.walletId!,
-      categoryId: data.categoryId,
+      categoryId: data.categoryId ?? null,
       userId: data.userId,
       newBalance,
     });

@@ -47,4 +47,11 @@ export const walletRepository = {
       },
     });
   },
+
+  softDelete: async (id: string) => {
+    return prisma.wallet.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  },
 };
