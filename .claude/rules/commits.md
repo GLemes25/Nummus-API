@@ -46,6 +46,14 @@ Regras rígidas de versionamento do repositório. Todos os agentes de IA e desen
    A branch `main` representa o espelho exato do ambiente de produção. Ela só deve ser atualizada por meio de merge da branch `dev`, nunca por commits ou pushes diretos.
 5. **Autorização obrigatória para merge em `main`**
    Agentes de IA e desenvolvedores **nunca** devem realizar merge para a branch `main` sem a ordem explícita do Tech Lead ou do usuário responsável pelo projeto. Essa autorização deve ser dada de forma clara e específica para cada merge.
+6. **Fluxo obrigatório de publicação (`dev` → `main`)**
+   Quando autorizado a publicar em produção, o processo deve seguir **sempre** esta ordem, sem exceção:
+   1. Commit(s) na branch `dev`.
+   2. `push` da branch `dev`.
+   3. Merge de `dev` em `main` (a partir da branch `main`).
+   4. `push` da branch `main`.
+   5. Checkout de volta para a branch `dev` ao final.
+   **Nunca** criar uma branch nova para esse fluxo e **nunca** commitar diretamente na `main` — o merge é sempre originado de `dev`.
 
 ## 5. Lembretes
 
