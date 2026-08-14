@@ -45,6 +45,22 @@ export const buildApp = async () => {
 
   app.setErrorHandler(errorHandler);
 
+  app.addContentTypeParser(
+    "application/json",
+    { parseAs: "string" },
+    (_request, body, done) => {
+      if (body === "") {
+        done(null, undefined);
+        return;
+      }
+      try {
+        done(null, JSON.parse(body as string));
+      } catch (error) {
+        done(error as Error, undefined);
+      }
+    },
+  );
+
   await app.register(fastifySwagger, {
     openapi: {
       info: {
