@@ -17,9 +17,11 @@ export const makeGetExpensesByCategoryUseCase = (repository: MetricsRepository) 
     const from = new Date(year, month - 1, 1);
     const to = new Date(year, month, 1); // primeiro dia do mês seguinte (exclusivo)
 
+    console.log('[DEBUG] Buscando despesas para:', { year, month, from, to });
+
     const transactions = await repository.findExpensesByPeriod(input.userId, from, to);
 
-    console.log('[DEBUG] Transações puxadas do banco:', transactions.length);
+    console.log('[DEBUG] Transações encontradas no BD:', transactions.length);
 
     const grouped = new Map<
       string | null,
@@ -48,7 +50,7 @@ export const makeGetExpensesByCategoryUseCase = (repository: MetricsRepository) 
       amount: Math.round(item.amount * 100) / 100,
     }));
 
-    console.log('[DEBUG] Resultado do agrupamento:', JSON.stringify(result, null, 2));
+    console.log('[DEBUG] Resultado do Agrupamento:', result);
 
     return result;
   };
