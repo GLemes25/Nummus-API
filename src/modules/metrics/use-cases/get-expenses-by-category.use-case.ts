@@ -19,6 +19,8 @@ export const makeGetExpensesByCategoryUseCase = (repository: MetricsRepository) 
 
     const transactions = await repository.findExpensesByPeriod(input.userId, from, to);
 
+    console.log('[DEBUG] Transações puxadas do banco:', transactions.length);
+
     const grouped = new Map<
       string | null,
       { amount: number; name: string; color: string; icon: string }
@@ -41,9 +43,13 @@ export const makeGetExpensesByCategoryUseCase = (repository: MetricsRepository) 
       }
     }
 
-    return Array.from(grouped.values()).map((item) => ({
+    const result = Array.from(grouped.values()).map((item) => ({
       ...item,
       amount: Math.round(item.amount * 100) / 100,
     }));
+
+    console.log('[DEBUG] Resultado do agrupamento:', JSON.stringify(result, null, 2));
+
+    return result;
   };
 };
