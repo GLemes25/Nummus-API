@@ -12,6 +12,7 @@ Use APENAS os seguintes prefixos, baseando-se na natureza das alterações:
 - **refactor**: Uma alteração de código que não corrige um bug nem adiciona uma funcionalidade (ex: simplificar a lógica de um componente, atualizar regras).
 - **chore**: Atualização de dependências, tarefas de build ou configurações de ferramentas.
 - **docs**: Mudanças apenas na documentação.
+- **merge**: Exclusivo para commits de merge entre branches. Ver Seção 8 para regras obrigatórias.
 
 ## 2. Regras de Formatação
 
@@ -31,6 +32,8 @@ Use estes commits passados do repositório como seu padrão de tom e estrutura:
 - `feat: add business hours and open status logic`
 - `refactor: update rules to claude code`
 - `style: remove gradient color to match minimalist design`
+- `merge: implement visual dashboard charts and category CRUD (dev -> main)`
+- `merge: fix CORS issues and add soft delete logic (feat/crud -> dev)`
 
 ## 4. Fluxo de Branches (Git Flow)
 
@@ -75,3 +78,43 @@ Regras rígidas de versionamento do repositório. Todos os agentes de IA e desen
 - **Feature nova vs correção**: Separe commits que adicionam algo novo (`feat`) de commits que corrigem ou refatoram algo já existente (`fix`/`refactor`), mesmo que pertençam à mesma tarefa ou objetivo maior.
 - **Configuração e dependências à parte**: Mudanças em `package.json`, `pnpm-lock.yaml`, `tsconfig.json` ou outras configurações de ferramentas vão em commits `chore`/`fix` isolados, nunca junto de mudanças de código de negócio ou de testes.
 - **Stage seletivo**: Quando um único arquivo (ex: `package.json`) misturar alterações de naturezas diferentes (ex: dependências de teste + script de build), use _stage_ parcial (por hunk ou reescrevendo o arquivo por etapas) para que cada commit reflita apenas uma intenção.
+
+## 8. Regras de Merge — OBRIGATÓRIO
+
+> Esta seção define o formato **estrito** para commits de merge. O descumprimento polui o histórico e dificulta deploys rastreáveis.
+
+**NUNCA** use mensagens genéricas como:
+- `merge branch 'dev' into main`
+- `merge: merge dev`
+- `merge pull request`
+
+**SEMPRE** resuma as principais funcionalidades ou correções que estão sendo mescladas. O formato obrigatório é:
+
+```
+merge: <resumo claro do que foi feito> (<branch-origem> -> <branch-destino>)
+```
+
+### Regras de conteúdo do resumo
+
+- Liste as 1–3 mudanças mais relevantes separadas por `and` ou vírgula.
+- Use o mesmo estilo imperativo das demais mensagens (verbos no presente).
+- Seja específico: prefira "add net worth trend endpoint" a "add new feature".
+- O par `(branch-origem -> branch-destino)` é **obrigatório** e sempre ao final.
+
+### Exemplos corretos
+
+- `merge: implement visual dashboard charts and category CRUD (dev -> main)`
+- `merge: fix CORS issues and add soft delete logic (feat/crud -> dev)`
+- `merge: add expenses-by-category and net-worth-trend metrics endpoints (dev -> main)`
+- `merge: fix wallet deletion bug and expand allowed CORS methods (dev -> main)`
+
+### Como executar o merge com mensagem descritiva
+
+Use `--no-ff` para forçar um commit de merge explícito e `-m` para definir a mensagem:
+
+```bash
+git checkout main
+git merge --no-ff dev -m "merge: <resumo> (dev -> main)"
+git push origin main
+git checkout dev
+```
