@@ -41,9 +41,11 @@ export const makeGetExpensesByCategoryUseCase = (repository: MetricsRepository) 
       }
     }
 
-    return Array.from(grouped.values()).map((item) => ({
+    const result = Array.from(grouped.values()).map((item) => ({
       ...item,
       amount: Math.round(item.amount * 100) / 100,
     }));
+
+    return result;
   };
 };
