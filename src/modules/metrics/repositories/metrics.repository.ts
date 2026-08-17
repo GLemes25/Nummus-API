@@ -24,4 +24,22 @@ export const metricsRepository = {
       },
     });
   },
+
+  findExpensesByPeriod: async (userId: string, from: Date, to: Date) => {
+    return prisma.transaction.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        type: "EXPENSE",
+        date: { gte: from, lt: to },
+      },
+      select: {
+        amount: true,
+        categoryId: true,
+        category: {
+          select: { name: true, color: true, icon: true },
+        },
+      },
+    });
+  },
 };

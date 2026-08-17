@@ -2,12 +2,15 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { verifyAuth } from "../../../shared/http/hooks/verify-auth.js";
+import { expensesByCategoryQuerySchema, expensesByCategoryResponseSchema } from "../dtos/expenses-by-category.dto.js";
 import { netWorthTrendResponseSchema } from "../dtos/net-worth-trend.dto.js";
 import { metricsRepository } from "../repositories/metrics.repository.js";
+import { makeGetExpensesByCategoryUseCase } from "../use-cases/get-expenses-by-category.use-case.js";
 import { makeGetNetWorthTrendUseCase } from "../use-cases/get-net-worth-trend.use-case.js";
 
 export const metricsRoutes = async (app: FastifyInstance) => {
   const getNetWorthTrend = makeGetNetWorthTrendUseCase(metricsRepository);
+  const getExpensesByCategory = makeGetExpensesByCategoryUseCase(metricsRepository);
 
   app.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",
@@ -22,6 +25,28 @@ export const metricsRoutes = async (app: FastifyInstance) => {
     handler: async (request, reply) => {
       const trend = await getNetWorthTrend(request.userId);
       return reply.status(200).send(trend);
+    },
+  });
+
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: "GET",
+    url: "/expenses-by-category",
+    preHandler: [verifyAuth],
+    schema: {
+      tags: ["Metrics"],
+      querystring: expensesByCategoryQuerySchema,
+      response: {
+        200: expensesByCategoryResponseSchema,
+      },
+    },
+    handler: async (request, reply) => {
+      const { month, year } = request.query;
+      const result = await getExpensesByCategory({
+        userId: request.userId,
+        ...(month !== undefined ? { month } : {}),
+        ...(year !== undefined ? { year } : {}),
+      });
+      return reply.status(200).send(result);
     },
   });
 };
