@@ -1,11 +1,9 @@
 type TransactionType = "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
-type WalletType = "CHECKING" | "SAVINGS" | "INVESTMENT" | "CREDIT_CARD";
 
 type InMemoryMetricsWallet = {
   userId: string;
   balance: number;
   deletedAt: Date | null;
-  type?: WalletType;
 };
 
 type InMemoryMetricsTransaction = {
@@ -17,24 +15,43 @@ type InMemoryMetricsTransaction = {
   deletedAt: Date | null;
 };
 
+type InMemoryMetricsCreditCard = {
+  id: string;
+  userId: string;
+  deletedAt: Date | null;
+};
+
+type InMemoryMetricsCreditCardInvoice = {
+  creditCardId: string;
+  totalAmount: number;
+  paid: boolean;
+  deletedAt: Date | null;
+};
+
 export const makeInMemoryMetricsRepository = () => {
   const wallets: InMemoryMetricsWallet[] = [];
   const transactions: InMemoryMetricsTransaction[] = [];
+  const creditCards: InMemoryMetricsCreditCard[] = [];
+  const creditCardInvoices: InMemoryMetricsCreditCardInvoice[] = [];
 
   return {
     wallets,
     transactions,
+    creditCards,
+    creditCardInvoices,
 
     findAssetsAndLiabilities: async (userId: string) => {
-      const active = wallets.filter((w) => w.userId === userId && w.deletedAt === null);
-
-      const assets = active
-        .filter((w) => (w.type ?? "CHECKING") !== "CREDIT_CARD")
+      const assets = wallets
+        .filter((w) => w.userId === userId && w.deletedAt === null)
         .reduce((sum, w) => sum + w.balance, 0);
 
-      const liabilities = active
-        .filter((w) => w.type === "CREDIT_CARD")
-        .reduce((sum, w) => sum + Math.abs(w.balance), 0);
+      const userCreditCardIds = new Set(
+        creditCards.filter((c) => c.userId === userId && c.deletedAt === null).map((c) => c.id),
+      );
+
+      const liabilities = creditCardInvoices
+        .filter((i) => userCreditCardIds.has(i.creditCardId) && !i.paid && i.deletedAt === null)
+        .reduce((sum, i) => sum + i.totalAmount, 0);
 
       return { assets, liabilities };
     },
