@@ -13,6 +13,18 @@ export const creditCardRepository = {
     return prisma.creditCard.findFirst({ where: { id, deletedAt: null } });
   },
 
+  findAllByUserId: async (userId: string) => {
+    return prisma.creditCard.findMany({
+      where: { userId, deletedAt: null },
+      include: {
+        invoices: {
+          where: { paid: false, deletedAt: null },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  },
+
   create: async (data: CreateCreditCardInput) => {
     return prisma.creditCard.create({
       data: {

@@ -27,6 +27,7 @@ export const creditCardResponseSchema = z.object({
   limit: z.number(),
   closingDay: z.number(),
   dueDay: z.number(),
+  currentInvoiceAmount: z.number(),
   userId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
