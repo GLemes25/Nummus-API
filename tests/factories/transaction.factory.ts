@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 
 type TransactionType = "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
-type PaymentMethod = "CASH" | "PIX" | "BANK_TRANSFER" | "DEBIT_CARD";
+type PaymentMethod = "CASH" | "PIX" | "BANK_TRANSFER" | "DEBIT_CARD" | "CREDIT_CARD";
 
 type TransactionInput = {
   amount: number;
@@ -9,7 +9,8 @@ type TransactionInput = {
   paymentMethod: PaymentMethod;
   date: Date;
   description: string;
-  walletId: string;
+  walletId?: string | undefined;
+  creditCardId?: string | undefined;
   categoryId: string;
   userId: string;
 };

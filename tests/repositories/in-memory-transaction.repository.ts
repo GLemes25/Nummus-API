@@ -15,7 +15,7 @@ export type InMemoryTransaction = {
   walletId: string | null;
   creditCardId: string | null;
   invoiceId: string | null;
-  categoryId: string;
+  categoryId: string | null;
   userId: string;
   deletedAt: Date | null;
   createdAt: Date;
@@ -49,11 +49,41 @@ type WalletBalanceUpdate = {
   newBalance: number;
 };
 
-export const makeInMemoryTransactionRepository = (wallets: InMemoryWallet[]) => {
+export type InMemoryCreditCardInvoice = {
+  id: string;
+  creditCardId: string;
+  periodStartDate: Date;
+  periodEndDate: Date;
+  dueDate: Date;
+  totalAmount: number;
+  paid: boolean;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type CreateWithInvoiceData = {
+  amount: number;
+  type: TransactionType;
+  date: Date;
+  description: string;
+  creditCardId: string;
+  categoryId: string | null;
+  userId: string;
+  periodStart: Date;
+  periodEnd: Date;
+  dueDate: Date;
+};
+
+export const makeInMemoryTransactionRepository = (
+  wallets: InMemoryWallet[],
+  invoices: InMemoryCreditCardInvoice[] = []
+) => {
   const items: InMemoryTransaction[] = [];
 
   return {
     items,
+    invoices,
 
     findById: async (id: string) => {
       return items.find((t) => t.id === id) ?? null;
@@ -124,8 +154,54 @@ export const makeInMemoryTransactionRepository = (wallets: InMemoryWallet[]) => 
       return { data: [], totalCount: 0 };
     },
 
-    createWithInvoiceUpdate: async () => {
-      throw new Error("createWithInvoiceUpdate is not implemented in the in-memory repository");
+    createWithInvoiceUpdate: async (data: CreateWithInvoiceData) => {
+      let invoice = invoices.find(
+        (i) =>
+          i.creditCardId === data.creditCardId &&
+          i.deletedAt === null &&
+          i.periodStartDate <= data.date &&
+          i.periodEndDate >= data.date
+      );
+
+      if (!invoice) {
+        invoice = {
+          id: randomUUID(),
+          creditCardId: data.creditCardId,
+          periodStartDate: data.periodStart,
+          periodEndDate: data.periodEnd,
+          dueDate: data.dueDate,
+          totalAmount: 0,
+          paid: false,
+          deletedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        invoices.push(invoice);
+      }
+
+      invoice.totalAmount += data.amount;
+      invoice.updatedAt = new Date();
+
+      const transaction: InMemoryTransaction = {
+        id: randomUUID(),
+        amount: data.amount,
+        type: data.type,
+        paymentMethod: "CREDIT_CARD",
+        status: "COMPLETED",
+        date: data.date,
+        description: data.description,
+        walletId: null,
+        creditCardId: data.creditCardId,
+        invoiceId: invoice.id,
+        categoryId: data.categoryId,
+        userId: data.userId,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      items.push(transaction);
+
+      return transaction;
     },
   };
 };
