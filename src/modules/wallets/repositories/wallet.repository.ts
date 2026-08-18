@@ -10,6 +10,7 @@ export const walletRepository = {
     return prisma.wallet.create({
       data: {
         name: data.name,
+        type: data.type,
         currency: data.currency,
         initialBalance: data.initialBalance,
         balance: data.initialBalance,
@@ -42,6 +43,7 @@ export const walletRepository = {
       where: { id },
       data: {
         ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.type !== undefined ? { type: data.type } : {}),
         ...(data.currency !== undefined ? { currency: data.currency } : {}),
         ...(data.initialBalance !== undefined ? { initialBalance: data.initialBalance } : {}),
       },

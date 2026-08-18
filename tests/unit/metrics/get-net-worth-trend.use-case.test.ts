@@ -1,7 +1,10 @@
+import { randomUUID } from "crypto";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { faker } from "@faker-js/faker";
 import { makeGetNetWorthTrendUseCase } from "../../../src/modules/metrics/use-cases/get-net-worth-trend.use-case.js";
 import { makeInMemoryMetricsRepository } from "../../repositories/in-memory-metrics.repository.js";
+import { makeFakeCreditCard } from "../../factories/credit-card.factory.js";
+import { makeFakeCreditCardInvoice } from "../../factories/credit-card-invoice.factory.js";
 
 // Pins time to 2024-08-15 → 6-month window: Mar, Abr, Mai, Jun, Jul, Ago
 const FIXED_NOW = new Date("2024-08-15T12:00:00.000Z");
@@ -225,5 +228,66 @@ describe("makeGetNetWorthTrendUseCase", () => {
     expect(result[2]).toEqual({ month: "Mai", balance: 300 });
     expect(result[1]).toEqual({ month: "Abr", balance: 300 });
     expect(result[0]).toEqual({ month: "Mar", balance: 300 });
+  });
+
+  it("should subtract unpaid credit card invoice totals from net worth", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    repo.wallets.push({ userId, balance: 1000, deletedAt: null });
+
+    const creditCard = makeFakeCreditCard({ userId });
+    const creditCardId = randomUUID();
+    repo.creditCards.push({ id: creditCardId, userId: creditCard.userId, deletedAt: null });
+    repo.creditCardInvoices.push({
+      ...makeFakeCreditCardInvoice({ creditCardId, totalAmount: 300, paid: false }),
+      deletedAt: null,
+    });
+
+    // Act
+    const result = await getNetWorthTrend(userId);
+
+    // Assert — net worth = assets (1000) - liabilities (300)
+    expect(result.every((r) => r.balance === 700)).toBe(true);
+  });
+
+  it("should not subtract paid credit card invoices from net worth", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    repo.wallets.push({ userId, balance: 1000, deletedAt: null });
+
+    const creditCard = makeFakeCreditCard({ userId });
+    const creditCardId = randomUUID();
+    repo.creditCards.push({ id: creditCardId, userId: creditCard.userId, deletedAt: null });
+    repo.creditCardInvoices.push({
+      ...makeFakeCreditCardInvoice({ creditCardId, totalAmount: 300, paid: true }),
+      deletedAt: null,
+    });
+
+    // Act
+    const result = await getNetWorthTrend(userId);
+
+    // Assert — paid invoices are not liabilities anymore
+    expect(result.every((r) => r.balance === 1000)).toBe(true);
+  });
+
+  it("should not include another user's credit card liabilities", async () => {
+    // Arrange
+    const userA = faker.string.uuid();
+    const userB = faker.string.uuid();
+    repo.wallets.push({ userId: userA, balance: 1000, deletedAt: null });
+
+    const creditCard = makeFakeCreditCard({ userId: userB });
+    const creditCardId = randomUUID();
+    repo.creditCards.push({ id: creditCardId, userId: creditCard.userId, deletedAt: null });
+    repo.creditCardInvoices.push({
+      ...makeFakeCreditCardInvoice({ creditCardId, totalAmount: 500, paid: false }),
+      deletedAt: null,
+    });
+
+    // Act
+    const result = await getNetWorthTrend(userA);
+
+    // Assert — User B's credit card debt doesn't affect User A's net worth
+    expect(result.every((r) => r.balance === 1000)).toBe(true);
   });
 });

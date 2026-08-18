@@ -1,9 +1,14 @@
 import { z } from "zod";
 
+export const walletTypeSchema = z.enum(["CHECKING", "SAVINGS", "INVESTMENT"], {
+  error: "O tipo da carteira deve ser CHECKING, SAVINGS ou INVESTMENT",
+});
+
 export const createWalletSchema = z.object({
   name: z
     .string({ error: "O nome da carteira é obrigatório" })
     .min(1, "O nome da carteira é obrigatório"),
+  type: walletTypeSchema.default("CHECKING"),
   currency: z.string({ error: "A moeda deve ser um texto válido" }).default("BRL"),
   initialBalance: z.number({ error: "O saldo inicial deve ser um número válido" }).default(0),
 });
@@ -22,6 +27,7 @@ export type GetWalletsDto = z.infer<typeof getWalletsSchema>;
 export const walletResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
+  type: walletTypeSchema,
   currency: z.string(),
   initialBalance: z.number(),
   balance: z.number(),

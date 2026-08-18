@@ -18,10 +18,12 @@ export const makeGetNetWorthTrendUseCase = (repository: MetricsRepository) => {
     const oldest = months[0]!;
     const rangeStart = new Date(oldest.year, oldest.month, 1);
 
-    const [currentBalance, transactions] = await Promise.all([
-      repository.findTotalWalletBalance(userId),
+    const [{ assets, liabilities }, transactions] = await Promise.all([
+      repository.findAssetsAndLiabilities(userId),
       repository.findWalletTransactionsInRange(userId, rangeStart, now),
     ]);
+
+    const currentBalance = assets - liabilities;
 
     // Agrupa fluxo líquido por mês
     const flowsByMonth = new Map<string, { income: number; expense: number; adjustment: number }>();

@@ -5,6 +5,7 @@ import type { WalletResponseDto } from "../../dtos/create-wallet.dto.js";
 export const presentWallet = (wallet: Wallet): WalletResponseDto => ({
   id: wallet.id,
   name: wallet.name,
+  type: wallet.type,
   currency: wallet.currency,
   initialBalance: Number(wallet.initialBalance),
   balance: Number(wallet.balance),

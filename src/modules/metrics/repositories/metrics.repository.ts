@@ -1,12 +1,22 @@
 import { prisma } from "../../../shared/lib/prisma.js";
 
 export const metricsRepository = {
-  findTotalWalletBalance: async (userId: string) => {
-    const result = await prisma.wallet.aggregate({
-      where: { userId, deletedAt: null },
-      _sum: { balance: true },
-    });
-    return Number(result._sum.balance ?? 0);
+  findAssetsAndLiabilities: async (userId: string) => {
+    const [assetsResult, liabilitiesResult] = await Promise.all([
+      prisma.wallet.aggregate({
+        where: { userId, deletedAt: null },
+        _sum: { balance: true },
+      }),
+      prisma.creditCardInvoice.aggregate({
+        where: { paid: false, deletedAt: null, creditCard: { userId, deletedAt: null } },
+        _sum: { totalAmount: true },
+      }),
+    ]);
+
+    return {
+      assets: Number(assetsResult._sum.balance ?? 0),
+      liabilities: Number(liabilitiesResult._sum.totalAmount ?? 0),
+    };
   },
 
   findWalletTransactionsInRange: async (userId: string, from: Date, to: Date) => {
