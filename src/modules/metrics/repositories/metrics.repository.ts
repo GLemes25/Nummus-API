@@ -4,18 +4,18 @@ export const metricsRepository = {
   findAssetsAndLiabilities: async (userId: string) => {
     const [assetsResult, liabilitiesResult] = await Promise.all([
       prisma.wallet.aggregate({
-        where: { userId, deletedAt: null, type: { in: ["CHECKING", "SAVINGS", "INVESTMENT"] } },
+        where: { userId, deletedAt: null },
         _sum: { balance: true },
       }),
-      prisma.wallet.aggregate({
-        where: { userId, deletedAt: null, type: "CREDIT_CARD" },
-        _sum: { balance: true },
+      prisma.creditCardInvoice.aggregate({
+        where: { paid: false, deletedAt: null, creditCard: { userId, deletedAt: null } },
+        _sum: { totalAmount: true },
       }),
     ]);
 
     return {
       assets: Number(assetsResult._sum.balance ?? 0),
-      liabilities: Math.abs(Number(liabilitiesResult._sum.balance ?? 0)),
+      liabilities: Number(liabilitiesResult._sum.totalAmount ?? 0),
     };
   },
 
