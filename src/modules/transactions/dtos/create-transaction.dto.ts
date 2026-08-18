@@ -25,6 +25,10 @@ export const createTransactionSchema = transactionBaseSchema
   })
   .refine((data) => data.paymentMethod === "CREDIT_CARD" || !!data.walletId, {
     message: "A carteira é obrigatória para formas de pagamento que não sejam cartão de crédito",
+  })
+  .refine((data) => !(data.walletId && data.creditCardId), {
+    message: "Uma transação não pode estar vinculada a uma carteira e a um cartão de crédito simultaneamente",
+    path: ["walletId"],
   });
 
 export type CreateTransactionDto = z.infer<typeof createTransactionSchema>;
