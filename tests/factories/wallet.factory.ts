@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 
-type WalletType = "CHECKING" | "SAVINGS" | "INVESTMENT" | "CREDIT_CARD";
+type WalletType = "CHECKING" | "SAVINGS" | "INVESTMENT";
 
 type WalletInput = {
   name: string;
