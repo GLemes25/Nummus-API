@@ -58,35 +58,42 @@ enum SyncStatus {
   FAILED
 }
 
+enum WalletType {
+  CHECKING
+  SAVINGS
+  INVESTMENT
+  CREDIT_CARD
+}
+
 // ==========================================
 // BLOCO 1: IDENTIDADE E ACESSO (Better Auth)
 // ==========================================
 
 model User {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String   @unique
+  emailVerified Boolean  @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  sessions                Session[]
-  accounts                Account[]
-  openFinanceConnections  OpenFinanceConnection[]
-  wallets                 Wallet[]
-  categories              Category[]
-  installmentPlans        InstallmentPlan[]
-  costCenters             CostCenter[]
-  creditCards             CreditCard[]
-  transactions            Transaction[]
-  transfers               Transfer[]
-  budgets                 Budget[]
-  goals                   Goal[]
-  recurringTransactions   RecurringTransaction[]
-  tags                    Tag[]
-  investments             Investment[]
-  netWorthSnapshots       NetWorthSnapshot[]
+  sessions               Session[]
+  accounts               Account[]
+  openFinanceConnections OpenFinanceConnection[]
+  wallets                Wallet[]
+  categories             Category[]
+  installmentPlans       InstallmentPlan[]
+  costCenters            CostCenter[]
+  creditCards            CreditCard[]
+  transactions           Transaction[]
+  transfers              Transfer[]
+  budgets                Budget[]
+  goals                  Goal[]
+  recurringTransactions  RecurringTransaction[]
+  tags                   Tag[]
+  investments            Investment[]
+  netWorthSnapshots      NetWorthSnapshot[]
 
   @@map("users")
 }
@@ -157,16 +164,20 @@ model OpenFinanceConnection {
 }
 
 model Wallet {
-  id             String    @id @default(cuid())
+  id             String     @id @default(cuid())
   name           String
-  currency       String    @default("BRL")
-  initialBalance Decimal   @db.Decimal(12, 2)
-  balance        Decimal   @db.Decimal(12, 2)
-  isArchived     Boolean   @default(false)
+  type           WalletType @default(CHECKING)
+  currency       String     @default("BRL")
+  initialBalance Decimal    @db.Decimal(12, 2)
+  balance        Decimal    @db.Decimal(12, 2)
+  creditLimit    Decimal?   @db.Decimal(12, 2)
+  closingDay     Int?
+  dueDay         Int?
+  isArchived     Boolean    @default(false)
   userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
   deletedAt      DateTime?
 
   transactions          Transaction[]
@@ -315,13 +326,13 @@ model Transaction {
   description   String            @db.Text
 
   walletId     String?
-  wallet       Wallet?    @relation(fields: [walletId], references: [id])
+  wallet       Wallet?     @relation(fields: [walletId], references: [id])
   creditCardId String?
   creditCard   CreditCard? @relation(fields: [creditCardId], references: [id])
   categoryId   String?
-  category     Category?  @relation(fields: [categoryId], references: [id])
+  category     Category?   @relation(fields: [categoryId], references: [id])
   userId       String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   installmentPlanId String?
   installmentPlan   InstallmentPlan?   @relation(fields: [installmentPlanId], references: [id])
@@ -342,16 +353,16 @@ model Transaction {
   transferIn  Transfer? @relation("TransferIn")
 
   // Índices cobrindo os padrões de consulta mais frequentes em dashboards financeiros
-  @@index([userId, date])          // listagem por período (mais comum)
-  @@index([userId, type])          // resumo de receitas/despesas
-  @@index([userId, status])        // transações pendentes
-  @@index([userId, deletedAt])     // filtro de soft delete
-  @@index([walletId])              // saldo e extrato por carteira
-  @@index([creditCardId])          // extrato por cartão
-  @@index([categoryId])            // gastos por categoria
-  @@index([invoiceId])             // transações de uma fatura
-  @@index([installmentPlanId])     // parcelas de um plano
-  @@index([date])                  // consultas analíticas por data
+  @@index([userId, date]) // listagem por período (mais comum)
+  @@index([userId, type]) // resumo de receitas/despesas
+  @@index([userId, status]) // transações pendentes
+  @@index([userId, deletedAt]) // filtro de soft delete
+  @@index([walletId]) // saldo e extrato por carteira
+  @@index([creditCardId]) // extrato por cartão
+  @@index([categoryId]) // gastos por categoria
+  @@index([invoiceId]) // transações de uma fatura
+  @@index([installmentPlanId]) // parcelas de um plano
+  @@index([date]) // consultas analíticas por data
   @@map("transactions")
 }
 
@@ -452,8 +463,8 @@ model CreditCardInvoice {
   // Impede faturas duplicadas para o mesmo período do mesmo cartão
   @@unique([creditCardId, periodStartDate, periodEndDate])
   @@index([creditCardId])
-  @@index([creditCardId, paid])  // faturas pendentes de pagamento
-  @@index([dueDate])             // alertas de vencimento
+  @@index([creditCardId, paid]) // faturas pendentes de pagamento
+  @@index([dueDate]) // alertas de vencimento
   @@map("credit_card_invoices")
 }
 

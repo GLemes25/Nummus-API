@@ -1,9 +1,11 @@
 type TransactionType = "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
+type WalletType = "CHECKING" | "SAVINGS" | "INVESTMENT" | "CREDIT_CARD";
 
 type InMemoryMetricsWallet = {
   userId: string;
   balance: number;
   deletedAt: Date | null;
+  type?: WalletType;
 };
 
 type InMemoryMetricsTransaction = {
@@ -23,10 +25,18 @@ export const makeInMemoryMetricsRepository = () => {
     wallets,
     transactions,
 
-    findTotalWalletBalance: async (userId: string) => {
-      return wallets
-        .filter((w) => w.userId === userId && w.deletedAt === null)
+    findAssetsAndLiabilities: async (userId: string) => {
+      const active = wallets.filter((w) => w.userId === userId && w.deletedAt === null);
+
+      const assets = active
+        .filter((w) => (w.type ?? "CHECKING") !== "CREDIT_CARD")
         .reduce((sum, w) => sum + w.balance, 0);
+
+      const liabilities = active
+        .filter((w) => w.type === "CREDIT_CARD")
+        .reduce((sum, w) => sum + Math.abs(w.balance), 0);
+
+      return { assets, liabilities };
     },
 
     findWalletTransactionsInRange: async (userId: string, from: Date, to: Date) => {
