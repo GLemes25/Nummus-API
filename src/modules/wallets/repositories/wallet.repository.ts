@@ -15,9 +15,6 @@ export const walletRepository = {
         initialBalance: data.initialBalance,
         balance: data.initialBalance,
         userId: data.userId,
-        ...(data.creditLimit !== undefined ? { creditLimit: data.creditLimit } : {}),
-        ...(data.closingDay !== undefined ? { closingDay: data.closingDay } : {}),
-        ...(data.dueDay !== undefined ? { dueDay: data.dueDay } : {}),
       },
     });
   },
@@ -49,9 +46,6 @@ export const walletRepository = {
         ...(data.type !== undefined ? { type: data.type } : {}),
         ...(data.currency !== undefined ? { currency: data.currency } : {}),
         ...(data.initialBalance !== undefined ? { initialBalance: data.initialBalance } : {}),
-        ...(data.creditLimit !== undefined ? { creditLimit: data.creditLimit } : {}),
-        ...(data.closingDay !== undefined ? { closingDay: data.closingDay } : {}),
-        ...(data.dueDay !== undefined ? { dueDay: data.dueDay } : {}),
       },
     });
   },
