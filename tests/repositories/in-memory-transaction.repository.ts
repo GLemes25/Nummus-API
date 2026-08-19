@@ -49,6 +49,18 @@ type WalletBalanceUpdate = {
   newBalance: number;
 };
 
+type FindManyPaginatedInput = {
+  userId: string;
+  page: number;
+  limit: number;
+  startDate?: Date;
+  endDate?: Date;
+  walletId?: string;
+  categoryId?: string;
+  creditCardId?: string;
+  type?: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
+};
+
 export type InMemoryCreditCardInvoice = {
   id: string;
   creditCardId: string;
@@ -150,8 +162,32 @@ export const makeInMemoryTransactionRepository = (
       }
     },
 
-    findManyPaginated: async () => {
-      return { data: [], totalCount: 0 };
+    findManyPaginated: async (filters: FindManyPaginatedInput) => {
+      const { userId, page, limit, startDate, endDate, walletId, categoryId, creditCardId, type } = filters;
+      const skip = (page - 1) * limit;
+
+      let filtered = items.filter((t) => {
+        if (t.userId !== userId) return false;
+        if (t.deletedAt !== null) return false;
+        if (startDate && t.date < startDate) return false;
+        if (endDate && t.date > endDate) return false;
+        if (walletId && t.walletId !== walletId) return false;
+        if (categoryId && t.categoryId !== categoryId) return false;
+        if (creditCardId && t.creditCardId !== creditCardId) return false;
+        if (type && t.type !== type) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+      const totalCount = filtered.length;
+      const data = filtered.slice(skip, skip + limit).map((t) => ({
+        ...t,
+        category: null,
+        wallet: null,
+      }));
+
+      return { data, totalCount };
     },
 
     createWithInvoiceUpdate: async (data: CreateWithInvoiceData) => {

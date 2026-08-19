@@ -7,7 +7,7 @@ type GetTransactionsInput = GetTransactionsDto & { userId: string };
 
 export const makeGetTransactionsUseCase = (repository: TransactionRepository) => {
   return async (data: GetTransactionsInput) => {
-    const { userId, page, limit, startDate, endDate, walletId, categoryId, type } = data;
+    const { userId, page, limit, startDate, endDate, walletId, categoryId, creditCardId, type } = data;
 
     const { data: transactions, totalCount } = await repository.findManyPaginated({
       userId,
@@ -17,6 +17,7 @@ export const makeGetTransactionsUseCase = (repository: TransactionRepository) =>
       ...(endDate !== undefined ? { endDate } : {}),
       ...(walletId !== undefined ? { walletId } : {}),
       ...(categoryId !== undefined ? { categoryId } : {}),
+      ...(creditCardId !== undefined ? { creditCardId } : {}),
       ...(type !== undefined ? { type } : {}),
     });
 
