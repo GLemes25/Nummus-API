@@ -16,6 +16,7 @@ export const getTransactionsSchema = z.object({
   endDate: z.coerce.date({ error: "A data final é inválida" }).optional(),
   walletId: z.string().optional(),
   categoryId: z.string().optional(),
+  creditCardId: z.string().optional(),
   type: z
     .enum(["INCOME", "EXPENSE", "BALANCE_ADJUSTMENT"], {
       error: "O tipo da transação é inválido",
