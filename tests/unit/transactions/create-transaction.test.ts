@@ -163,7 +163,7 @@ describe("makeCreateTransactionUseCase", () => {
         creditCardId: creditCard.id,
         categoryId: category.id,
         type: "EXPENSE",
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         amount: 300,
       })
     );
@@ -195,7 +195,7 @@ describe("makeCreateTransactionUseCase", () => {
         creditCardId: creditCard.id,
         categoryId: category.id,
         type: "EXPENSE",
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         amount: 100,
         date: sameDay,
       })
@@ -207,7 +207,7 @@ describe("makeCreateTransactionUseCase", () => {
         creditCardId: creditCard.id,
         categoryId: category.id,
         type: "EXPENSE",
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         amount: 50,
         date: sameDay,
       })
@@ -234,7 +234,7 @@ describe("makeCreateTransactionUseCase", () => {
           creditCardId: faker.string.uuid(),
           categoryId: category.id,
           type: "EXPENSE",
-          paymentMethod: "CREDIT_CARD",
+          paymentMethod: "CREDIT",
           amount: 100,
         })
       )
@@ -263,7 +263,7 @@ describe("makeCreateTransactionUseCase", () => {
         creditCardId: creditCard.id,
         categoryId: category.id,
         type: "EXPENSE",
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         amount: 100,
         date: transactionDate,
       })
@@ -299,7 +299,7 @@ describe("makeCreateTransactionUseCase", () => {
         creditCardId: creditCard.id,
         categoryId: category.id,
         type: "EXPENSE",
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         amount: 200,
         date: transactionDate,
       })
@@ -336,7 +336,7 @@ describe("makeCreateTransactionUseCase", () => {
         creditCardId: creditCard.id,
         categoryId: category.id,
         type: "EXPENSE",
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         amount: 100,
         date: dateBefore,
       })
@@ -348,7 +348,7 @@ describe("makeCreateTransactionUseCase", () => {
         creditCardId: creditCard.id,
         categoryId: category.id,
         type: "EXPENSE",
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         amount: 200,
         date: dateAfter,
       })
