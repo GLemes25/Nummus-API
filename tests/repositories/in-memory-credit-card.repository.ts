@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import type { InMemoryWallet } from "./in-memory-wallet.repository.js";
 
 type InMemoryCreditCard = {
   id: string;
@@ -20,7 +21,14 @@ type InMemoryCreditCardInvoice = {
   deletedAt: Date | null;
 };
 
-export const makeInMemoryCreditCardRepository = () => {
+type UpdateCreditCardData = {
+  name?: string;
+  limit?: number;
+  closingDay?: number;
+  dueDay?: number;
+};
+
+export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => {
   const items: InMemoryCreditCard[] = [];
   const invoices: InMemoryCreditCardInvoice[] = [];
 
@@ -62,6 +70,46 @@ export const makeInMemoryCreditCardRepository = () => {
       };
       items.push(card);
       return card;
+    },
+
+    update: async (id: string, data: UpdateCreditCardData) => {
+      const card = items.find((c) => c.id === id && c.deletedAt === null);
+      if (!card) return null;
+      if (data.name !== undefined) card.name = data.name;
+      if (data.limit !== undefined) card.limit = data.limit;
+      if (data.closingDay !== undefined) card.closingDay = data.closingDay;
+      if (data.dueDay !== undefined) card.dueDay = data.dueDay;
+      card.updatedAt = new Date();
+      return card;
+    },
+
+    softDelete: async (id: string) => {
+      const card = items.find((c) => c.id === id);
+      if (card) card.deletedAt = new Date();
+    },
+
+    findOpenInvoicesByCard: async (creditCardId: string) => {
+      return invoices.filter(
+        (i) => i.creditCardId === creditCardId && !i.paid && i.deletedAt === null,
+      );
+    },
+
+    payOpenInvoices: async (
+      creditCardId: string,
+      walletId: string,
+      totalAmount: number,
+      _userId: string,
+    ) => {
+      invoices
+        .filter((i) => i.creditCardId === creditCardId && !i.paid && i.deletedAt === null)
+        .forEach((i) => {
+          i.paid = true;
+        });
+
+      if (wallets) {
+        const wallet = wallets.find((w) => w.id === walletId);
+        if (wallet) wallet.balance -= totalAmount;
+      }
     },
   };
 };
