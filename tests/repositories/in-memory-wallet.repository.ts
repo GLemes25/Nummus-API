@@ -62,5 +62,10 @@ export const makeInMemoryWalletRepository = () => {
       Object.assign(wallet, data, { updatedAt: new Date() });
       return wallet;
     },
+
+    softDelete: async (id: string) => {
+      const wallet = items.find((w) => w.id === id);
+      if (wallet) wallet.deletedAt = new Date();
+    },
   };
 };

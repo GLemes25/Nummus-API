@@ -13,6 +13,8 @@ type InMemoryMetricsTransaction = {
   type: TransactionType;
   date: Date;
   deletedAt: Date | null;
+  categoryId?: string | null;
+  category?: { name: string; color: string; icon: string } | null;
 };
 
 type InMemoryMetricsCreditCard = {
@@ -67,6 +69,23 @@ export const makeInMemoryMetricsRepository = () => {
             t.date <= to,
         )
         .map((t) => ({ amount: t.amount, type: t.type, date: t.date }));
+    },
+
+    findExpensesByPeriod: async (userId: string, from: Date, to: Date) => {
+      return transactions
+        .filter(
+          (t) =>
+            t.userId === userId &&
+            t.deletedAt === null &&
+            t.type === "EXPENSE" &&
+            t.date >= from &&
+            t.date < to,
+        )
+        .map((t) => ({
+          amount: t.amount,
+          categoryId: t.categoryId ?? null,
+          category: t.category ?? null,
+        }));
     },
   };
 };
