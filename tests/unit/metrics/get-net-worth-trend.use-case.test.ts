@@ -175,6 +175,27 @@ describe("makeGetNetWorthTrendUseCase", () => {
     expect(result.every((r) => r.balance === 1000)).toBe(true);
   });
 
+  it("should exclude TRANSFER transactions so inter-wallet transfers do not distort the trend", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    repo.wallets.push({ userId, balance: 1000, deletedAt: null });
+
+    // A real income in August (should affect trend)
+    repo.transactions.push({ userId, walletId: "w1", amount: 200, type: "INCOME", paymentMethod: "PIX", date: aug(5), deletedAt: null });
+    // Transfer out (EXPENSE/TRANSFER): the money moved to another wallet — must NOT be counted as a real expense
+    repo.transactions.push({ userId, walletId: "w1", amount: 200, type: "EXPENSE", paymentMethod: "TRANSFER", date: aug(5), deletedAt: null });
+    // Transfer in (INCOME/TRANSFER): the receiving side — must NOT be counted as real income
+    repo.transactions.push({ userId, walletId: "w2", amount: 200, type: "INCOME", paymentMethod: "TRANSFER", date: aug(5), deletedAt: null });
+
+    // Act
+    const result = await getNetWorthTrend(userId);
+
+    // Assert — net flow for August should be +200 (only the real PIX income),
+    // not +200 from the transfer pair cancelling, nor 0 from double-counting both sides.
+    expect(result[5]).toEqual({ month: "Ago", balance: 1000 });
+    expect(result[4]).toEqual({ month: "Jul", balance: 800 }); // 1000 - 200 (real income reversed)
+  });
+
   it("should not include transactions older than 6 months", async () => {
     // Arrange
     const userId = faker.string.uuid();

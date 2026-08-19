@@ -163,6 +163,33 @@ describe("makeGetExpensesByCategoryUseCase", () => {
     expect(result[0]!.amount).toBe(Math.round((10.005 + 20.005) * 100) / 100);
   });
 
+  it("should exclude TRANSFER transactions (invoice payments and inter-wallet transfers) from expense metrics", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const category = { name: "Food", color: "#ff0000", icon: "utensils" };
+
+    // Real expense (should be counted)
+    repo.transactions.push(
+      { userId, walletId: "w1", amount: 200, type: "EXPENSE", paymentMethod: "CASH", date: aug(5), deletedAt: null, categoryId: "cat-food", category },
+    );
+    // Invoice payment via TRANSFER (must NOT be counted as an expense)
+    repo.transactions.push(
+      { userId, walletId: "w1", amount: 500, type: "EXPENSE", paymentMethod: "TRANSFER", date: aug(10), deletedAt: null, categoryId: "cat-food", category },
+    );
+    // Inter-wallet transfer via TRANSFER (must NOT be counted)
+    repo.transactions.push(
+      { userId, walletId: "w1", amount: 300, type: "EXPENSE", paymentMethod: "TRANSFER", date: aug(15), deletedAt: null, categoryId: null, category: null },
+    );
+
+    // Act
+    const result = await getExpensesByCategory({ userId, month: 8, year: 2024 });
+
+    // Assert — only the real CASH expense is counted
+    expect(result).toHaveLength(1);
+    expect(result[0]!.name).toBe("Food");
+    expect(result[0]!.amount).toBe(200);
+  });
+
   it("should use current month and year when month and year are not provided", async () => {
     // Arrange — system time is fixed to August 2024
     const userId = faker.string.uuid();
