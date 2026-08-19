@@ -1,3 +1,4 @@
+import { PaymentMethod } from "@prisma/client";
 import { z } from "zod";
 
 export const getTransactionsSchema = z.object({
@@ -30,7 +31,7 @@ export const transactionListItemSchema = z.object({
   id: z.string(),
   amount: z.number(),
   type: z.enum(["INCOME", "EXPENSE", "BALANCE_ADJUSTMENT"]),
-  paymentMethod: z.enum(["CASH", "PIX", "BANK_TRANSFER", "DEBIT_CARD", "CREDIT_CARD"]),
+  paymentMethod: z.nativeEnum(PaymentMethod),
   status: z.enum(["PENDING", "COMPLETED", "CANCELLED"]),
   date: z.date(),
   description: z.string(),
