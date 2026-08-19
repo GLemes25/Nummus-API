@@ -19,9 +19,9 @@ enum TransactionType {
 enum PaymentMethod {
   CASH
   PIX
-  BANK_TRANSFER
-  CREDIT_CARD
-  DEBIT_CARD
+  TRANSFER
+  CREDIT
+  DEBIT
 }
 
 enum TransactionStatus {
