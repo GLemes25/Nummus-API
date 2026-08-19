@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import type { InMemoryWallet } from "./in-memory-wallet.repository.ts";
 
 type TransactionType = "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
-type PaymentMethod = "CASH" | "PIX" | "BANK_TRANSFER" | "DEBIT_CARD" | "CREDIT_CARD";
+type PaymentMethod = "CASH" | "PIX" | "TRANSFER" | "DEBIT" | "CREDIT";
 
 export type InMemoryTransaction = {
   id: string;
@@ -25,7 +25,7 @@ export type InMemoryTransaction = {
 type CreateWithBalanceData = {
   storedAmount: number;
   type: TransactionType;
-  paymentMethod: "CASH" | "PIX" | "BANK_TRANSFER" | "DEBIT_CARD";
+  paymentMethod: Exclude<PaymentMethod, "CREDIT">;
   date: Date;
   description: string;
   walletId: string;
@@ -222,7 +222,7 @@ export const makeInMemoryTransactionRepository = (
         id: randomUUID(),
         amount: data.amount,
         type: data.type,
-        paymentMethod: "CREDIT_CARD",
+        paymentMethod: "CREDIT",
         status: "COMPLETED",
         date: data.date,
         description: data.description,
