@@ -40,7 +40,7 @@ export const transferRepository = {
         data: {
           amount: data.amount,
           type: "EXPENSE",
-          paymentMethod: "BANK_TRANSFER",
+          paymentMethod: "TRANSFER",
           status: "COMPLETED",
           date: data.date,
           description: data.description ?? "Transfer out",
@@ -59,7 +59,7 @@ export const transferRepository = {
         data: {
           amount: data.amount,
           type: "INCOME",
-          paymentMethod: "BANK_TRANSFER",
+          paymentMethod: "TRANSFER",
           status: "COMPLETED",
           date: data.date,
           description: data.description ?? "Transfer in",
