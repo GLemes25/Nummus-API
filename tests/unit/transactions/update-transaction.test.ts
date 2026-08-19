@@ -196,4 +196,66 @@ describe("makeUpdateTransactionUseCase", () => {
       statusCode: 403,
     });
   });
+
+  it("should throw TRANSACTION_NOT_FOUND when trying to update a soft-deleted transaction", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const wallet = await walletRepo.create(makeFakeWallet({ userId, initialBalance: 1000 }));
+    const category = await categoryRepo.create(makeFakeCategory({ userId }));
+    const transaction = await createTransaction(
+      makeFakeTransaction({
+        userId,
+        walletId: wallet.id,
+        categoryId: category.id,
+        type: "EXPENSE",
+        paymentMethod: "CASH",
+        amount: 100,
+      })
+    );
+
+    // Simulate soft-delete
+    const item = transactionRepo.items.find((t) => t.id === transaction.id);
+    if (item) item.deletedAt = new Date();
+
+    // Act & Assert
+    await expect(
+      updateTransaction({ transactionId: transaction.id, userId, data: { description: "New desc" } })
+    ).rejects.toMatchObject({
+      code: "TRANSACTION_NOT_FOUND",
+      statusCode: 404,
+    });
+  });
+
+  it("should not alter the wallet balance when updating a BALANCE_ADJUSTMENT transaction", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const wallet = await walletRepo.create(makeFakeWallet({ userId, initialBalance: 1000 }));
+    const category = await categoryRepo.create(makeFakeCategory({ userId }));
+
+    // Create a BALANCE_ADJUSTMENT — stored amount is (targetAmount - currentBalance) = 500 - 1000 = -500
+    const transaction = await createTransaction(
+      makeFakeTransaction({
+        userId,
+        walletId: wallet.id,
+        categoryId: category.id,
+        type: "BALANCE_ADJUSTMENT",
+        paymentMethod: "CASH",
+        amount: 500,
+      })
+    );
+
+    // After BA, wallet balance should be 500
+    expect(walletRepo.items.find((w) => w.id === wallet.id)?.balance).toBe(500);
+
+    // Act — update only the description
+    const updated = await updateTransaction({
+      transactionId: transaction.id,
+      userId,
+      data: { description: "Adjusted balance note" },
+    });
+
+    // Assert — wallet balance is unchanged
+    expect(walletRepo.items.find((w) => w.id === wallet.id)?.balance).toBe(500);
+    expect(updated?.description).toBe("Adjusted balance note");
+  });
 });

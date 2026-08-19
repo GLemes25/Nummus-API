@@ -157,4 +157,35 @@ describe("makeDeleteTransactionUseCase", () => {
     expect(balanceAfterFirstDelete).toBe(1000);
     expect(balanceAfterSecondDelete).toBe(1000);
   });
+
+  it("should soft-delete a BALANCE_ADJUSTMENT transaction without reverting the wallet balance", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const wallet = await walletRepo.create(makeFakeWallet({ userId, initialBalance: 1000 }));
+    const category = await categoryRepo.create(makeFakeCategory({ userId }));
+
+    // BA sets wallet balance to 400 (stored delta = 400 - 1000 = -600)
+    const transaction = await createTransaction(
+      makeFakeTransaction({
+        userId,
+        walletId: wallet.id,
+        categoryId: category.id,
+        type: "BALANCE_ADJUSTMENT",
+        paymentMethod: "CASH",
+        amount: 400,
+      })
+    );
+
+    expect(walletRepo.items.find((w) => w.id === wallet.id)?.balance).toBe(400);
+
+    // Act
+    await deleteTransaction({ transactionId: transaction.id, userId });
+
+    // Assert — BA deletion does NOT revert the wallet to 1000
+    const deletedItem = transactionRepo.items.find((t) => t.id === transaction.id);
+    expect(deletedItem?.deletedAt).not.toBeNull();
+
+    // Balance stays at 400, not reverted to 1000
+    expect(walletRepo.items.find((w) => w.id === wallet.id)?.balance).toBe(400);
+  });
 });

@@ -243,4 +243,121 @@ describe("makeCreateTransactionUseCase", () => {
       message: "Cartão de crédito não encontrado",
     });
   });
+
+  it("should assign a transaction before the closing day to the PREVIOUS billing period", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const category = await categoryRepo.create(makeFakeCategory({ userId }));
+    // closingDay=10, dueDay=5
+    const creditCard = { id: faker.string.uuid(), closingDay: 10, dueDay: 5, userId };
+    creditCards.push(creditCard);
+
+    // Aug 8 → day 8 <= closingDay 10 → period: Jul 11 → Aug 10
+    const transactionDate = new Date(2024, 7, 8); // August 8, 2024
+
+    // Act
+    const transaction = await createTransaction(
+      makeFakeTransaction({
+        userId,
+        walletId: undefined,
+        creditCardId: creditCard.id,
+        categoryId: category.id,
+        type: "EXPENSE",
+        paymentMethod: "CREDIT_CARD",
+        amount: 100,
+        date: transactionDate,
+      })
+    );
+
+    // Assert — transaction is linked to an invoice covering July 11 → August 10
+    const invoice = transactionRepo.invoices.find((i) => i.id === transaction.invoiceId);
+    expect(invoice).toBeDefined();
+    // periodStart should be July 11 (month - 1, closingDay + 1)
+    expect(invoice!.periodStartDate.getMonth()).toBe(6); // July (0-indexed)
+    expect(invoice!.periodStartDate.getDate()).toBe(11);
+    // periodEnd should be August 10
+    expect(invoice!.periodEndDate.getMonth()).toBe(7); // August (0-indexed)
+    expect(invoice!.periodEndDate.getDate()).toBe(10);
+  });
+
+  it("should assign a transaction after the closing day to the CURRENT billing period", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const category = await categoryRepo.create(makeFakeCategory({ userId }));
+    // closingDay=10, dueDay=5
+    const creditCard = { id: faker.string.uuid(), closingDay: 10, dueDay: 5, userId };
+    creditCards.push(creditCard);
+
+    // Aug 15 → day 15 > closingDay 10 → period: Aug 11 → Sep 10
+    const transactionDate = new Date(2024, 7, 15); // August 15, 2024
+
+    // Act
+    const transaction = await createTransaction(
+      makeFakeTransaction({
+        userId,
+        walletId: undefined,
+        creditCardId: creditCard.id,
+        categoryId: category.id,
+        type: "EXPENSE",
+        paymentMethod: "CREDIT_CARD",
+        amount: 200,
+        date: transactionDate,
+      })
+    );
+
+    // Assert — transaction is linked to an invoice covering August 11 → September 10
+    const invoice = transactionRepo.invoices.find((i) => i.id === transaction.invoiceId);
+    expect(invoice).toBeDefined();
+    // periodStart should be August 11
+    expect(invoice!.periodStartDate.getMonth()).toBe(7); // August (0-indexed)
+    expect(invoice!.periodStartDate.getDate()).toBe(11);
+    // periodEnd should be September 10
+    expect(invoice!.periodEndDate.getMonth()).toBe(8); // September (0-indexed)
+    expect(invoice!.periodEndDate.getDate()).toBe(10);
+  });
+
+  it("should create separate invoices for transactions in different billing periods", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const category = await categoryRepo.create(makeFakeCategory({ userId }));
+    const creditCard = { id: faker.string.uuid(), closingDay: 10, dueDay: 5, userId };
+    creditCards.push(creditCard);
+
+    // Aug 8 → previous period (Jul 11 → Aug 10)
+    const dateBefore = new Date(2024, 7, 8);
+    // Aug 15 → current period (Aug 11 → Sep 10)
+    const dateAfter = new Date(2024, 7, 15);
+
+    // Act
+    const tx1 = await createTransaction(
+      makeFakeTransaction({
+        userId,
+        walletId: undefined,
+        creditCardId: creditCard.id,
+        categoryId: category.id,
+        type: "EXPENSE",
+        paymentMethod: "CREDIT_CARD",
+        amount: 100,
+        date: dateBefore,
+      })
+    );
+    const tx2 = await createTransaction(
+      makeFakeTransaction({
+        userId,
+        walletId: undefined,
+        creditCardId: creditCard.id,
+        categoryId: category.id,
+        type: "EXPENSE",
+        paymentMethod: "CREDIT_CARD",
+        amount: 200,
+        date: dateAfter,
+      })
+    );
+
+    // Assert — two different invoices are created, one per billing period
+    expect(transactionRepo.invoices).toHaveLength(2);
+    expect(tx1.invoiceId).not.toBe(tx2.invoiceId);
+    expect(transactionRepo.invoices[0]!.totalAmount).toBe(100);
+    expect(transactionRepo.invoices[1]!.totalAmount).toBe(200);
+  });
 });
