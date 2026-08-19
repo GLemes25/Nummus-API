@@ -1,6 +1,7 @@
 import { prisma } from "../../../shared/lib/prisma.js";
 
 import type { CreateCreditCardDto } from "../dtos/create-credit-card.dto.js";
+import type { UpdateCreditCardDto } from "../dtos/update-credit-card.dto.js";
 
 type CreateCreditCardInput = CreateCreditCardDto & { userId: string };
 
@@ -34,6 +35,25 @@ export const creditCardRepository = {
         dueDay: data.dueDay,
         userId: data.userId,
       },
+    });
+  },
+
+  update: async (id: string, data: UpdateCreditCardDto) => {
+    return prisma.creditCard.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.limit !== undefined ? { limit: data.limit } : {}),
+        ...(data.closingDay !== undefined ? { closingDay: data.closingDay } : {}),
+        ...(data.dueDay !== undefined ? { dueDay: data.dueDay } : {}),
+      },
+    });
+  },
+
+  softDelete: async (id: string) => {
+    await prisma.creditCard.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
   },
 };
