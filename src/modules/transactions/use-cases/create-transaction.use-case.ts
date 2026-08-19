@@ -50,7 +50,7 @@ export const makeCreateTransactionUseCase = (
       }
     }
 
-    if (data.paymentMethod === "CREDIT_CARD") {
+    if (data.paymentMethod === "CREDIT") {
       const creditCard = await findCreditCard(data.creditCardId!);
       if (!creditCard) {
         throw makeAppError({
