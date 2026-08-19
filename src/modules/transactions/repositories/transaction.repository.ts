@@ -1,9 +1,11 @@
+import { PaymentMethod } from "@prisma/client";
+
 import { prisma } from "../../../shared/lib/prisma.js";
 
 type CreateTransactionData = {
   storedAmount: number;
   type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
-  paymentMethod: "CASH" | "PIX" | "BANK_TRANSFER" | "DEBIT_CARD";
+  paymentMethod: Exclude<PaymentMethod, "CREDIT">;
   date: Date;
   description: string;
   walletId: string;
@@ -28,7 +30,7 @@ type CreateWithInvoiceData = {
 type UpdateTransactionData = {
   amount: number;
   type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
-  paymentMethod: "CASH" | "PIX" | "BANK_TRANSFER" | "DEBIT_CARD" | "CREDIT_CARD";
+  paymentMethod: PaymentMethod;
   date: Date;
   description: string;
   walletId: string | null;
@@ -206,7 +208,7 @@ export const transactionRepository = {
         data: {
           amount: data.amount,
           type: data.type,
-          paymentMethod: "CREDIT_CARD",
+          paymentMethod: "CREDIT",
           status: "COMPLETED",
           date: data.date,
           description: data.description,

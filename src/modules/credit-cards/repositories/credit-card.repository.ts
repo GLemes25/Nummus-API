@@ -84,7 +84,7 @@ export const creditCardRepository = {
         data: {
           amount: totalAmount,
           type: "EXPENSE",
-          paymentMethod: "BANK_TRANSFER",
+          paymentMethod: "TRANSFER",
           status: "COMPLETED",
           date: new Date(),
           description: "Pagamento de fatura de cartão de crédito",

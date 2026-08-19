@@ -461,7 +461,7 @@ const main = async () => {
         data: {
           amount: installmentAmount,
           type: "EXPENSE",
-          paymentMethod: "CREDIT_CARD",
+          paymentMethod: "CREDIT",
           date: randomDateInMonth(ref),
           description: `${seed.description} (${installmentNumber}/${seed.totalInstallments})`,
           creditCardId: seed.card.id,
@@ -509,7 +509,7 @@ const main = async () => {
           faker.number.float({ min: 6000, max: 8500, fractionDigits: 2 }),
         ),
         type: "INCOME",
-        paymentMethod: "BANK_TRANSFER",
+        paymentMethod: "TRANSFER",
         date: new Date(Date.UTC(ref.year, ref.month, 5)),
         description: randomItem(INCOME_DESCRIPTIONS["Salário"]!),
         walletId: wallets[0]!.id,
@@ -555,7 +555,7 @@ const main = async () => {
         data: {
           amount,
           type: "EXPENSE",
-          paymentMethod: randomItem(["PIX", "BANK_TRANSFER"] as const),
+          paymentMethod: randomItem(["PIX", "TRANSFER"] as const),
           date: randomDateInMonth(ref),
           description: bill.description,
           walletId: checkingWallet.id,
@@ -576,7 +576,7 @@ const main = async () => {
       const paymentMethod =
         wallet.id === cashWallet.id
           ? "CASH"
-          : randomItem(["CASH", "PIX", "DEBIT_CARD", "BANK_TRANSFER"] as const);
+          : randomItem(["CASH", "PIX", "DEBIT", "TRANSFER"] as const);
       const amount =
         wallet.id === cashWallet.id
           ? round2(faker.number.float({ min: 10, max: 80, fractionDigits: 2 }))
@@ -615,7 +615,7 @@ const main = async () => {
         data: {
           amount,
           type: "EXPENSE",
-          paymentMethod: "CREDIT_CARD",
+          paymentMethod: "CREDIT",
           date: randomDateInMonth(ref),
           description: randomItem(
             CREDIT_CARD_EXPENSE_DESCRIPTIONS[categoryName]!,
@@ -653,7 +653,7 @@ const main = async () => {
       data: {
         amount,
         type: "EXPENSE",
-        paymentMethod: "BANK_TRANSFER",
+        paymentMethod: "TRANSFER",
         date,
         description,
         walletId: fromWallet.id,
@@ -665,7 +665,7 @@ const main = async () => {
       data: {
         amount,
         type: "INCOME",
-        paymentMethod: "BANK_TRANSFER",
+        paymentMethod: "TRANSFER",
         date,
         description,
         walletId: toWallet.id,

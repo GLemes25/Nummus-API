@@ -11,6 +11,7 @@ type InMemoryMetricsTransaction = {
   walletId: string | null;
   amount: number;
   type: TransactionType;
+  paymentMethod?: string;
   date: Date;
   deletedAt: Date | null;
   categoryId?: string | null;
@@ -65,6 +66,7 @@ export const makeInMemoryMetricsRepository = () => {
             t.userId === userId &&
             t.deletedAt === null &&
             t.walletId !== null &&
+            t.paymentMethod !== "TRANSFER" &&
             t.date >= from &&
             t.date <= to,
         )
@@ -78,6 +80,7 @@ export const makeInMemoryMetricsRepository = () => {
             t.userId === userId &&
             t.deletedAt === null &&
             t.type === "EXPENSE" &&
+            t.paymentMethod !== "TRANSFER" &&
             t.date >= from &&
             t.date < to,
         )

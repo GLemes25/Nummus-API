@@ -25,6 +25,7 @@ export const metricsRepository = {
         userId,
         deletedAt: null,
         walletId: { not: null },
+        paymentMethod: { not: "TRANSFER" },
         date: { gte: from, lte: to },
       },
       select: {
@@ -41,6 +42,7 @@ export const metricsRepository = {
         userId,
         deletedAt: null,
         type: "EXPENSE",
+        paymentMethod: { not: "TRANSFER" },
         date: { gte: from, lt: to },
       },
       select: {
