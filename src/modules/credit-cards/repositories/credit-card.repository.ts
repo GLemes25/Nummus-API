@@ -56,4 +56,42 @@ export const creditCardRepository = {
       data: { deletedAt: new Date() },
     });
   },
+
+  findOpenInvoicesByCard: async (creditCardId: string) => {
+    return prisma.creditCardInvoice.findMany({
+      where: { creditCardId, paid: false, deletedAt: null },
+    });
+  },
+
+  payOpenInvoices: async (
+    creditCardId: string,
+    walletId: string,
+    totalAmount: number,
+    userId: string,
+  ) => {
+    return prisma.$transaction(async (tx) => {
+      await tx.creditCardInvoice.updateMany({
+        where: { creditCardId, paid: false, deletedAt: null },
+        data: { paid: true },
+      });
+
+      await tx.wallet.update({
+        where: { id: walletId },
+        data: { balance: { decrement: totalAmount } },
+      });
+
+      await tx.transaction.create({
+        data: {
+          amount: totalAmount,
+          type: "EXPENSE",
+          paymentMethod: "BANK_TRANSFER",
+          status: "COMPLETED",
+          date: new Date(),
+          description: "Pagamento de fatura de cartão de crédito",
+          walletId,
+          userId,
+        },
+      });
+    });
+  },
 };
