@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { makeAppError } from "../../../shared/errors/make-app-error.js";
 import type { transactionRepository } from "../repositories/transaction.repository.js";
 import type { CreateTransactionDto } from "../dtos/create-transaction.dto.js";
@@ -32,6 +33,17 @@ const computeInvoicePeriod = (date: Date, closingDay: number, dueDay: number) =>
   };
 };
 
+// Adiciona N meses a uma data sem pular dias incorretamente (ex: Jan 31 + 1 mês = Feb 28, não Mar 3)
+const addMonths = (date: Date, months: number): Date => {
+  const d = new Date(date.getFullYear(), date.getMonth() + months, date.getDate());
+  if (d.getDate() !== date.getDate()) {
+    d.setDate(0); // último dia do mês correto
+  }
+  return d;
+};
+
+const roundCents = (value: number) => Math.round(value * 100) / 100;
+
 export const makeCreateTransactionUseCase = (
   repository: TransactionRepository,
   findWallet: FindWallet,
@@ -50,6 +62,10 @@ export const makeCreateTransactionUseCase = (
       }
     }
 
+    const installments = data.installments ?? 1;
+    const installmentAmount = roundCents(data.amount / installments);
+    const installmentId = installments > 1 ? randomUUID() : undefined;
+
     if (data.paymentMethod === "CREDIT") {
       const creditCard = await findCreditCard(data.creditCardId!);
       if (!creditCard) {
@@ -58,6 +74,39 @@ export const makeCreateTransactionUseCase = (
           message: "Cartão de crédito não encontrado",
           statusCode: 404,
         });
+      }
+
+      if (installments > 1) {
+        const installmentItems = Array.from({ length: installments }, (_, i) => {
+          const installmentDate = addMonths(data.date, i);
+          const { periodStart, periodEnd, dueDate } = computeInvoicePeriod(
+            installmentDate,
+            creditCard.closingDay,
+            creditCard.dueDay
+          );
+          // Última parcela absorve os centavos residuais
+          const amount =
+            i === installments - 1
+              ? roundCents(data.amount - installmentAmount * (installments - 1))
+              : installmentAmount;
+
+          return {
+            amount,
+            type: data.type,
+            date: installmentDate,
+            description: `${data.description} (${i + 1}/${installments})`,
+            creditCardId: data.creditCardId!,
+            categoryId: data.categoryId ?? null,
+            userId: data.userId,
+            installmentId: installmentId!,
+            installmentNumber: i + 1,
+            periodStart,
+            periodEnd,
+            dueDate,
+          };
+        });
+
+        return repository.createManyCreditInstallments(installmentItems);
       }
 
       const { periodStart, periodEnd, dueDate } = computeInvoicePeriod(
@@ -90,6 +139,45 @@ export const makeCreateTransactionUseCase = (
     }
 
     const currentBalance = wallet.balance.toNumber();
+
+    if (installments > 1) {
+      // Apenas a primeira parcela afeta o saldo imediatamente; as demais são compromissos futuros
+      let firstInstallmentNewBalance: number;
+      if (data.type === "INCOME") {
+        firstInstallmentNewBalance = currentBalance + installmentAmount;
+      } else if (data.type === "EXPENSE") {
+        firstInstallmentNewBalance = currentBalance - installmentAmount;
+      } else {
+        firstInstallmentNewBalance = data.amount;
+      }
+
+      const installmentItems = Array.from({ length: installments }, (_, i) => {
+        const amount =
+          i === installments - 1
+            ? roundCents(data.amount - installmentAmount * (installments - 1))
+            : installmentAmount;
+
+        return {
+          amount,
+          type: data.type,
+          paymentMethod: data.paymentMethod as Exclude<typeof data.paymentMethod, "CREDIT">,
+          date: addMonths(data.date, i),
+          description: `${data.description} (${i + 1}/${installments})`,
+          walletId: data.walletId!,
+          categoryId: data.categoryId ?? null,
+          userId: data.userId,
+          installmentId: installmentId!,
+          installmentNumber: i + 1,
+        };
+      });
+
+      return repository.createManyWalletInstallments(
+        installmentItems,
+        data.walletId!,
+        firstInstallmentNewBalance
+      );
+    }
+
     let storedAmount: number;
     let newBalance: number;
 

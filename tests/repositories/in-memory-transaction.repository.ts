@@ -17,6 +17,8 @@ export type InMemoryTransaction = {
   invoiceId: string | null;
   categoryId: string | null;
   userId: string;
+  installmentId: string | null;
+  installmentNumber: number | null;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -59,6 +61,34 @@ type FindManyPaginatedInput = {
   categoryId?: string;
   creditCardId?: string;
   type?: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
+};
+
+type CreateWalletInstallmentItem = {
+  amount: number;
+  type: TransactionType;
+  paymentMethod: Exclude<PaymentMethod, "CREDIT">;
+  date: Date;
+  description: string;
+  walletId: string;
+  categoryId: string | null;
+  userId: string;
+  installmentId: string;
+  installmentNumber: number;
+};
+
+type CreateCreditInstallmentItem = {
+  amount: number;
+  type: TransactionType;
+  date: Date;
+  description: string;
+  creditCardId: string;
+  categoryId: string | null;
+  userId: string;
+  installmentId: string;
+  installmentNumber: number;
+  periodStart: Date;
+  periodEnd: Date;
+  dueDate: Date;
 };
 
 export type InMemoryCreditCardInvoice = {
@@ -115,6 +145,8 @@ export const makeInMemoryTransactionRepository = (
         invoiceId: null,
         categoryId: data.categoryId,
         userId: data.userId,
+        installmentId: null,
+        installmentNumber: null,
         deletedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -231,6 +263,8 @@ export const makeInMemoryTransactionRepository = (
         invoiceId: invoice.id,
         categoryId: data.categoryId,
         userId: data.userId,
+        installmentId: null,
+        installmentNumber: null,
         deletedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -238,6 +272,100 @@ export const makeInMemoryTransactionRepository = (
       items.push(transaction);
 
       return transaction;
+    },
+
+    createManyWalletInstallments: async (
+      installmentItems: CreateWalletInstallmentItem[],
+      walletId: string,
+      firstInstallmentNewBalance: number
+    ) => {
+      const created: InMemoryTransaction[] = [];
+
+      for (const item of installmentItems) {
+        const transaction: InMemoryTransaction = {
+          id: randomUUID(),
+          amount: item.amount,
+          type: item.type,
+          paymentMethod: item.paymentMethod,
+          status: "COMPLETED",
+          date: item.date,
+          description: item.description,
+          walletId: item.walletId,
+          creditCardId: null,
+          invoiceId: null,
+          categoryId: item.categoryId,
+          userId: item.userId,
+          installmentId: item.installmentId,
+          installmentNumber: item.installmentNumber,
+          deletedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        items.push(transaction);
+        created.push(transaction);
+      }
+
+      const wallet = wallets.find((w) => w.id === walletId);
+      if (wallet) wallet.balance = firstInstallmentNewBalance;
+
+      return created[0]!;
+    },
+
+    createManyCreditInstallments: async (installmentItems: CreateCreditInstallmentItem[]) => {
+      const created: InMemoryTransaction[] = [];
+
+      for (const item of installmentItems) {
+        let invoice = invoices.find(
+          (i) =>
+            i.creditCardId === item.creditCardId &&
+            i.deletedAt === null &&
+            i.periodStartDate <= item.date &&
+            i.periodEndDate >= item.date
+        );
+
+        if (!invoice) {
+          invoice = {
+            id: randomUUID(),
+            creditCardId: item.creditCardId,
+            periodStartDate: item.periodStart,
+            periodEndDate: item.periodEnd,
+            dueDate: item.dueDate,
+            totalAmount: 0,
+            paid: false,
+            deletedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          invoices.push(invoice);
+        }
+
+        invoice.totalAmount += item.amount;
+        invoice.updatedAt = new Date();
+
+        const transaction: InMemoryTransaction = {
+          id: randomUUID(),
+          amount: item.amount,
+          type: item.type,
+          paymentMethod: "CREDIT",
+          status: "COMPLETED",
+          date: item.date,
+          description: item.description,
+          walletId: null,
+          creditCardId: item.creditCardId,
+          invoiceId: invoice.id,
+          categoryId: item.categoryId,
+          userId: item.userId,
+          installmentId: item.installmentId,
+          installmentNumber: item.installmentNumber,
+          deletedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        items.push(transaction);
+        created.push(transaction);
+      }
+
+      return created[0]!;
     },
   };
 };

@@ -18,6 +18,7 @@ export const transactionBaseSchema = z.object({
   walletId: z.string().min(1, "O identificador da carteira é inválido").optional(),
   creditCardId: z.string().min(1, "O identificador do cartão de crédito é inválido").optional(),
   categoryId: z.string().min(1, "O identificador da categoria é inválido").optional(),
+  installments: z.number().int().min(1).default(1).optional(),
 });
 
 export const createTransactionSchema = transactionBaseSchema.superRefine((data, ctx) => {
@@ -66,6 +67,8 @@ export const transactionResponseSchema = z.object({
   description: z.string(),
   walletId: z.string().nullable(),
   creditCardId: z.string().nullable(),
+  installmentId: z.string().nullable(),
+  installmentNumber: z.number().int().nullable(),
   categoryId: z.string().nullable(),
   userId: z.string(),
   createdAt: z.date(),

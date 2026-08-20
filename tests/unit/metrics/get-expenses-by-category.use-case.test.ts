@@ -190,6 +190,32 @@ describe("makeGetExpensesByCategoryUseCase", () => {
     expect(result[0]!.amount).toBe(200);
   });
 
+  it("should use the explicit startDate/endDate range instead of month/year when provided", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const category = { name: "Food", color: "#ff0000", icon: "utensils" };
+
+    // Inside the explicit range (Aug 1 - Aug 20)
+    repo.transactions.push(
+      { userId, walletId: null, amount: 120, type: "EXPENSE", date: aug(10), deletedAt: null, categoryId: "cat-food", category },
+    );
+    // Outside the explicit range, but still in August (would be included by month/year lookup)
+    repo.transactions.push(
+      { userId, walletId: null, amount: 999, type: "EXPENSE", date: aug(25), deletedAt: null, categoryId: "cat-food", category },
+    );
+
+    // Act
+    const result = await getExpensesByCategory({
+      userId,
+      startDate: new Date(2024, 7, 1),
+      endDate: new Date(2024, 7, 20, 23, 59, 59, 999),
+    });
+
+    // Assert
+    expect(result).toHaveLength(1);
+    expect(result[0]!.amount).toBe(120);
+  });
+
   it("should use current month and year when month and year are not provided", async () => {
     // Arrange — system time is fixed to August 2024
     const userId = faker.string.uuid();

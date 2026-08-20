@@ -1,29 +1,38 @@
 import { PaymentMethod } from "@prisma/client";
 import { z } from "zod";
 
-export const getTransactionsSchema = z.object({
-  page: z.coerce
-    .number({ error: "A página deve ser um número válido" })
-    .int("A página deve ser um número inteiro")
-    .positive("A página deve ser maior que zero")
-    .default(1),
-  limit: z.coerce
-    .number({ error: "O limite deve ser um número válido" })
-    .int("O limite deve ser um número inteiro")
-    .positive("O limite deve ser maior que zero")
-    .max(100, "O limite máximo é 100")
-    .default(20),
-  startDate: z.coerce.date({ error: "A data inicial é inválida" }).optional(),
-  endDate: z.coerce.date({ error: "A data final é inválida" }).optional(),
-  walletId: z.string().optional(),
-  categoryId: z.string().optional(),
-  creditCardId: z.string().optional(),
-  type: z
-    .enum(["INCOME", "EXPENSE", "BALANCE_ADJUSTMENT"], {
-      error: "O tipo da transação é inválido",
-    })
-    .optional(),
-});
+export const getTransactionsSchema = z
+  .object({
+    page: z.coerce
+      .number({ error: "A página deve ser um número válido" })
+      .int("A página deve ser um número inteiro")
+      .positive("A página deve ser maior que zero")
+      .default(1),
+    limit: z.coerce
+      .number({ error: "O limite deve ser um número válido" })
+      .int("O limite deve ser um número inteiro")
+      .positive("O limite deve ser maior que zero")
+      .max(100, "O limite máximo é 100")
+      .default(20),
+    startDate: z.coerce.date({ error: "A data inicial é inválida" }).optional(),
+    endDate: z.coerce.date({ error: "A data final é inválida" }).optional(),
+    walletId: z.string().optional(),
+    categoryId: z.string().optional(),
+    creditCardId: z.string().optional(),
+    type: z
+      .enum(["INCOME", "EXPENSE", "BALANCE_ADJUSTMENT"], {
+        error: "O tipo da transação é inválido",
+      })
+      .optional(),
+  })
+  .refine((data) => (data.startDate === undefined) === (data.endDate === undefined), {
+    message: "startDate e endDate devem ser enviados juntos",
+    path: ["endDate"],
+  })
+  .refine((data) => !data.startDate || !data.endDate || data.startDate <= data.endDate, {
+    message: "startDate deve ser menor ou igual a endDate",
+    path: ["endDate"],
+  });
 
 export type GetTransactionsDto = z.infer<typeof getTransactionsSchema>;
 

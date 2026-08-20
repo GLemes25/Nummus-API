@@ -235,6 +235,57 @@ describe("makeGetTransactionsUseCase", () => {
     expect(result.data[0]!.description).toBe("in range");
   });
 
+  it("should not return a future installment (October) when filtering transactions by the September date range", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const walletId = faker.string.uuid();
+
+    await transactionRepo.createManyWalletInstallments(
+      [
+        {
+          amount: 100,
+          type: "EXPENSE",
+          paymentMethod: "CASH",
+          date: new Date(2024, 8, 10), // September 10, 2024
+          description: "Geladeira (1/2)",
+          walletId,
+          categoryId: faker.string.uuid(),
+          userId,
+          installmentId: faker.string.uuid(),
+          installmentNumber: 1,
+        },
+        {
+          amount: 100,
+          type: "EXPENSE",
+          paymentMethod: "CASH",
+          date: new Date(2024, 9, 10), // October 10, 2024
+          description: "Geladeira (2/2)",
+          walletId,
+          categoryId: faker.string.uuid(),
+          userId,
+          installmentId: faker.string.uuid(),
+          installmentNumber: 2,
+        },
+      ],
+      walletId,
+      900
+    );
+
+    // Act — filter strictly within September
+    const result = await getTransactions({
+      userId,
+      page: 1,
+      limit: 20,
+      startDate: new Date(2024, 8, 1),
+      endDate: new Date(2024, 8, 30, 23, 59, 59, 999),
+    });
+
+    // Assert
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]!.description).toBe("Geladeira (1/2)");
+    expect(result.meta.totalCount).toBe(1);
+  });
+
   it("should paginate results and return the correct page slice", async () => {
     // Arrange
     const userId = faker.string.uuid();

@@ -330,6 +330,7 @@ model Transaction {
   userId       String
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  installmentId     String?
   installmentPlanId String?
   installmentPlan   InstallmentPlan?   @relation(fields: [installmentPlanId], references: [id])
   installmentNumber Int?
@@ -357,6 +358,7 @@ model Transaction {
   @@index([creditCardId]) // extrato por cartão
   @@index([categoryId]) // gastos por categoria
   @@index([invoiceId]) // transações de uma fatura
+  @@index([installmentId]) // agrupa parcelas de um parcelamento
   @@index([installmentPlanId]) // parcelas de um plano
   @@index([date]) // consultas analíticas por data
   @@map("transactions")
