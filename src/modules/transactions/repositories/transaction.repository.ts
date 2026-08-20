@@ -54,6 +54,34 @@ type FindManyPaginatedInput = {
   type?: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
 };
 
+type CreateWalletInstallmentItem = {
+  amount: number;
+  type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
+  paymentMethod: Exclude<PaymentMethod, "CREDIT">;
+  date: Date;
+  description: string;
+  walletId: string;
+  categoryId: string | null;
+  userId: string;
+  installmentId: string;
+  installmentNumber: number;
+};
+
+type CreateCreditInstallmentItem = {
+  amount: number;
+  type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
+  date: Date;
+  description: string;
+  creditCardId: string;
+  categoryId: string | null;
+  userId: string;
+  installmentId: string;
+  installmentNumber: number;
+  periodStart: Date;
+  periodEnd: Date;
+  dueDate: Date;
+};
+
 export const transactionRepository = {
   findById: async (id: string) => {
     return prisma.transaction.findFirst({ where: { id } });
@@ -220,6 +248,95 @@ export const transactionRepository = {
       });
 
       return transaction;
+    });
+  },
+
+  createManyWalletInstallments: async (
+    installments: CreateWalletInstallmentItem[],
+    walletId: string,
+    firstInstallmentNewBalance: number
+  ) => {
+    return prisma.$transaction(async (tx) => {
+      await tx.wallet.update({
+        where: { id: walletId },
+        data: { balance: firstInstallmentNewBalance },
+      });
+
+      const results = [];
+      for (const item of installments) {
+        const transaction = await tx.transaction.create({
+          data: {
+            amount: item.amount,
+            type: item.type,
+            paymentMethod: item.paymentMethod,
+            status: "COMPLETED",
+            date: item.date,
+            description: item.description,
+            walletId: item.walletId,
+            categoryId: item.categoryId,
+            userId: item.userId,
+            installmentId: item.installmentId,
+            installmentNumber: item.installmentNumber,
+          },
+        });
+        results.push(transaction);
+      }
+
+      return results[0]!;
+    });
+  },
+
+  createManyCreditInstallments: async (installments: CreateCreditInstallmentItem[]) => {
+    return prisma.$transaction(async (tx) => {
+      const results = [];
+
+      for (const item of installments) {
+        let invoice = await tx.creditCardInvoice.findFirst({
+          where: {
+            creditCardId: item.creditCardId,
+            periodStartDate: { lte: item.date },
+            periodEndDate: { gte: item.date },
+            deletedAt: null,
+          },
+        });
+
+        if (!invoice) {
+          invoice = await tx.creditCardInvoice.create({
+            data: {
+              creditCardId: item.creditCardId,
+              periodStartDate: item.periodStart,
+              periodEndDate: item.periodEnd,
+              dueDate: item.dueDate,
+              totalAmount: 0,
+            },
+          });
+        }
+
+        await tx.creditCardInvoice.update({
+          where: { id: invoice.id },
+          data: { totalAmount: { increment: item.amount } },
+        });
+
+        const transaction = await tx.transaction.create({
+          data: {
+            amount: item.amount,
+            type: item.type,
+            paymentMethod: "CREDIT",
+            status: "COMPLETED",
+            date: item.date,
+            description: item.description,
+            creditCardId: item.creditCardId,
+            categoryId: item.categoryId,
+            userId: item.userId,
+            invoiceId: invoice.id,
+            installmentId: item.installmentId,
+            installmentNumber: item.installmentNumber,
+          },
+        });
+        results.push(transaction);
+      }
+
+      return results[0]!;
     });
   },
 };
