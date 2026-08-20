@@ -59,11 +59,13 @@ export const metricsRoutes = async (app: FastifyInstance) => {
       },
     },
     handler: async (request, reply) => {
-      const { month, year } = request.query;
+      const { month, year, startDate, endDate } = request.query;
       const result = await getExpensesByCategory({
         userId: request.userId,
         ...(month !== undefined ? { month } : {}),
         ...(year !== undefined ? { year } : {}),
+        ...(startDate !== undefined ? { startDate } : {}),
+        ...(endDate !== undefined ? { endDate } : {}),
       });
       return reply.status(200).send(result);
     },

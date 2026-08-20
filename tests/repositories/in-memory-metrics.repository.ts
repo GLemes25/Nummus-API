@@ -82,7 +82,7 @@ export const makeInMemoryMetricsRepository = () => {
             t.type === "EXPENSE" &&
             t.paymentMethod !== "TRANSFER" &&
             t.date >= from &&
-            t.date < to,
+            t.date <= to,
         )
         .map((t) => ({
           amount: t.amount,

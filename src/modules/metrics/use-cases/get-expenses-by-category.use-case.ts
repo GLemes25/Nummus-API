@@ -8,14 +8,30 @@ const UNCATEGORIZED = {
   icon: "help-circle",
 };
 
-export const makeGetExpensesByCategoryUseCase = (repository: MetricsRepository) => {
-  return async (input: { userId: string; month?: number; year?: number }) => {
-    const now = new Date();
-    const month = input.month ?? now.getMonth() + 1;
-    const year = input.year ?? now.getFullYear();
+type GetExpensesByCategoryInput = {
+  userId: string;
+  month?: number;
+  year?: number;
+  startDate?: Date;
+  endDate?: Date;
+};
 
-    const from = new Date(year, month - 1, 1);
-    const to = new Date(year, month, 1); // primeiro dia do mês seguinte (exclusivo)
+export const makeGetExpensesByCategoryUseCase = (repository: MetricsRepository) => {
+  return async (input: GetExpensesByCategoryInput) => {
+    let from: Date;
+    let to: Date;
+
+    if (input.startDate && input.endDate) {
+      from = input.startDate;
+      to = input.endDate;
+    } else {
+      const now = new Date();
+      const month = input.month ?? now.getMonth() + 1;
+      const year = input.year ?? now.getFullYear();
+
+      from = new Date(year, month - 1, 1);
+      to = new Date(year, month, 0, 23, 59, 59, 999); // último instante do mês (inclusivo)
+    }
 
     const transactions = await repository.findExpensesByPeriod(input.userId, from, to);
 

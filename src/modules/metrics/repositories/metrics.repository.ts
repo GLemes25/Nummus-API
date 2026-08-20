@@ -43,7 +43,7 @@ export const metricsRepository = {
         deletedAt: null,
         type: "EXPENSE",
         paymentMethod: { not: "TRANSFER" },
-        date: { gte: from, lt: to },
+        date: { gte: from, lte: to },
       },
       select: {
         amount: true,
