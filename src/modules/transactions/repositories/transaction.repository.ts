@@ -50,6 +50,7 @@ type FindManyPaginatedInput = {
   limit: number;
   startDate?: Date;
   endDate?: Date;
+  search?: string;
   walletId?: string;
   categoryId?: string;
   creditCardId?: string;
@@ -92,7 +93,8 @@ export const transactionRepository = {
   },
 
   findManyPaginated: async (filters: FindManyPaginatedInput) => {
-    const { userId, page, limit, startDate, endDate, walletId, categoryId, creditCardId, type } = filters;
+    const { userId, page, limit, startDate, endDate, search, walletId, categoryId, creditCardId, type } =
+      filters;
     const skip = (page - 1) * limit;
 
     const dateFilter: { gte?: Date; lte?: Date } = {};
@@ -103,6 +105,7 @@ export const transactionRepository = {
       userId,
       deletedAt: null,
       ...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {}),
+      ...(search ? { description: { contains: search, mode: "insensitive" as const } } : {}),
       ...(walletId ? { walletId } : {}),
       ...(categoryId ? { categoryId } : {}),
       ...(creditCardId ? { creditCardId } : {}),
