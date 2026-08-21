@@ -33,7 +33,7 @@ export const creditCardRepository = {
         limit: data.limit,
         closingDay: data.closingDay,
         dueDay: data.dueDay,
-        walletId: data.walletId,
+        walletId: data.walletId ?? null,
         userId: data.userId,
       },
     });
