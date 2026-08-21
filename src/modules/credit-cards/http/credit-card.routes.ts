@@ -25,9 +25,9 @@ type CreditCardRouteDeps = {
 export const creditCardRoutes =
   ({ findWallet }: CreditCardRouteDeps) =>
   async (app: FastifyInstance) => {
-    const createCreditCard = makeCreateCreditCardUseCase(creditCardRepository);
+    const createCreditCard = makeCreateCreditCardUseCase(creditCardRepository, findWallet);
     const getCreditCards = makeGetCreditCardsUseCase(creditCardRepository);
-    const updateCreditCard = makeUpdateCreditCardUseCase(creditCardRepository);
+    const updateCreditCard = makeUpdateCreditCardUseCase(creditCardRepository, findWallet);
     const deleteCreditCard = makeDeleteCreditCardUseCase(creditCardRepository);
     const payInvoice = makePayInvoiceUseCase(creditCardRepository, findWallet);
 
@@ -63,6 +63,9 @@ export const creditCardRoutes =
         body: createCreditCardSchema,
         response: {
           201: creditCardResponseSchema,
+          403: appErrorResponseSchema,
+          404: appErrorResponseSchema,
+          409: appErrorResponseSchema,
         },
       },
       handler: async (request, reply) => {
