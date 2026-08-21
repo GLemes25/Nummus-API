@@ -3,10 +3,12 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { verifyAuth } from "../../../shared/http/hooks/verify-auth.js";
 import { expensesByCategoryQuerySchema, expensesByCategoryResponseSchema } from "../dtos/expenses-by-category.dto.js";
+import { monthlySummaryQuerySchema, monthlySummaryResponseSchema } from "../dtos/monthly-summary.dto.js";
 import { netWorthResponseSchema } from "../dtos/net-worth.dto.js";
 import { netWorthTrendResponseSchema } from "../dtos/net-worth-trend.dto.js";
 import { metricsRepository } from "../repositories/metrics.repository.js";
 import { makeGetExpensesByCategoryUseCase } from "../use-cases/get-expenses-by-category.use-case.js";
+import { makeGetMonthlySummaryUseCase } from "../use-cases/get-monthly-summary.use-case.js";
 import { makeGetNetWorthUseCase } from "../use-cases/get-net-worth.use-case.js";
 import { makeGetNetWorthTrendUseCase } from "../use-cases/get-net-worth-trend.use-case.js";
 
@@ -14,6 +16,7 @@ export const metricsRoutes = async (app: FastifyInstance) => {
   const getNetWorth = makeGetNetWorthUseCase(metricsRepository);
   const getNetWorthTrend = makeGetNetWorthTrendUseCase(metricsRepository);
   const getExpensesByCategory = makeGetExpensesByCategoryUseCase(metricsRepository);
+  const getMonthlySummary = makeGetMonthlySummaryUseCase(metricsRepository);
 
   app.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",
@@ -68,6 +71,24 @@ export const metricsRoutes = async (app: FastifyInstance) => {
         ...(endDate !== undefined ? { endDate } : {}),
       });
       return reply.status(200).send(result);
+    },
+  });
+
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: "GET",
+    url: "/summary",
+    preHandler: [verifyAuth],
+    schema: {
+      tags: ["Metrics"],
+      querystring: monthlySummaryQuerySchema,
+      response: {
+        200: monthlySummaryResponseSchema,
+      },
+    },
+    handler: async (request, reply) => {
+      const { startDate, endDate } = request.query;
+      const summary = await getMonthlySummary({ userId: request.userId, startDate, endDate });
+      return reply.status(200).send(summary);
     },
   });
 };

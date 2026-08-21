@@ -54,4 +54,20 @@ export const metricsRepository = {
       },
     });
   },
+
+  findIncomeAndExpenseByPeriod: async (userId: string, from: Date, to: Date) => {
+    return prisma.transaction.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        type: { in: ["INCOME", "EXPENSE"] },
+        paymentMethod: { not: "TRANSFER" },
+        date: { gte: from, lte: to },
+      },
+      select: {
+        amount: true,
+        type: true,
+      },
+    });
+  },
 };
