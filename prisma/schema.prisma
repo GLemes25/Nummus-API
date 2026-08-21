@@ -180,6 +180,7 @@ model Wallet {
   goals                 Goal[]
   recurringTransactions RecurringTransaction[]
   openFinanceConnection OpenFinanceConnection?
+  creditCards           CreditCard[]
 
   // Impede carteiras com nome duplicado por usuário
   @@unique([userId, name])
@@ -421,12 +422,15 @@ model Attachment {
 // BLOCO 5: MÁQUINAS DO TEMPO DE DÍVIDA
 // ==========================================
 
+// Vínculo com Wallet é opcional: cartões de loja avulsos permanecem sem walletId
 model CreditCard {
   id         String    @id @default(cuid())
   name       String
   limit      Decimal   @db.Decimal(12, 2)
   closingDay Int
   dueDay     Int
+  walletId   String?
+  wallet     Wallet?   @relation(fields: [walletId], references: [id])
   userId     String
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime  @default(now())
@@ -440,6 +444,7 @@ model CreditCard {
   @@unique([userId, name])
   @@index([userId])
   @@index([userId, deletedAt])
+  @@index([walletId])
   @@map("credit_cards")
 }
 
