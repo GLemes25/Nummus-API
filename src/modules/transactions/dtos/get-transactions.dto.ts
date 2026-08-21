@@ -16,6 +16,7 @@ export const getTransactionsSchema = z
       .default(20),
     startDate: z.coerce.date({ error: "A data inicial é inválida" }).optional(),
     endDate: z.coerce.date({ error: "A data final é inválida" }).optional(),
+    search: z.string().optional(),
     walletId: z.string().optional(),
     categoryId: z.string().optional(),
     creditCardId: z.string().optional(),
