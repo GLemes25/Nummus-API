@@ -316,6 +316,60 @@ describe("makeGetTransactionsUseCase", () => {
     expect(result.meta.page).toBe(2);
   });
 
+  it("should filter transactions by search text and type combined", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const walletId = faker.string.uuid();
+
+    await transactionRepo.createWithBalanceUpdate({
+      storedAmount: 35,
+      type: "EXPENSE",
+      paymentMethod: "CASH",
+      date: new Date(),
+      description: "Uber to the airport",
+      walletId,
+      categoryId: faker.string.uuid(),
+      userId,
+      newBalance: 965,
+    });
+    await transactionRepo.createWithBalanceUpdate({
+      storedAmount: 1500,
+      type: "INCOME",
+      paymentMethod: "CASH",
+      date: new Date(),
+      description: "Uber driver payout",
+      walletId,
+      categoryId: faker.string.uuid(),
+      userId,
+      newBalance: 2465,
+    });
+    await transactionRepo.createWithBalanceUpdate({
+      storedAmount: 20,
+      type: "EXPENSE",
+      paymentMethod: "CASH",
+      date: new Date(),
+      description: "Grocery store",
+      walletId,
+      categoryId: faker.string.uuid(),
+      userId,
+      newBalance: 2445,
+    });
+
+    // Act
+    const result = await getTransactions({
+      userId,
+      page: 1,
+      limit: 20,
+      search: "uber",
+      type: "EXPENSE",
+    });
+
+    // Assert
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]!.description).toBe("Uber to the airport");
+    expect(result.meta.totalCount).toBe(1);
+  });
+
   it("should return empty data with totalCount 0 when no transactions match", async () => {
     // Arrange
     const userId = faker.string.uuid();

@@ -58,6 +58,7 @@ type FindManyPaginatedInput = {
   limit: number;
   startDate?: Date;
   endDate?: Date;
+  search?: string;
   walletId?: string;
   categoryId?: string;
   creditCardId?: string;
@@ -205,7 +206,8 @@ export const makeInMemoryTransactionRepository = (
     },
 
     findManyPaginated: async (filters: FindManyPaginatedInput) => {
-      const { userId, page, limit, startDate, endDate, walletId, categoryId, creditCardId, type } = filters;
+      const { userId, page, limit, startDate, endDate, search, walletId, categoryId, creditCardId, type } =
+        filters;
       const skip = (page - 1) * limit;
 
       let filtered = items.filter((t) => {
@@ -213,6 +215,7 @@ export const makeInMemoryTransactionRepository = (
         if (t.deletedAt !== null) return false;
         if (startDate && t.date < startDate) return false;
         if (endDate && t.date > endDate) return false;
+        if (search && !t.description.toLowerCase().includes(search.toLowerCase())) return false;
         if (walletId && t.walletId !== walletId) return false;
         if (categoryId && t.categoryId !== categoryId) return false;
         if (creditCardId && t.creditCardId !== creditCardId) return false;
