@@ -90,5 +90,19 @@ export const makeInMemoryMetricsRepository = () => {
           category: t.category ?? null,
         }));
     },
+
+    findIncomeAndExpenseByPeriod: async (userId: string, from: Date, to: Date) => {
+      return transactions
+        .filter(
+          (t) =>
+            t.userId === userId &&
+            t.deletedAt === null &&
+            (t.type === "INCOME" || t.type === "EXPENSE") &&
+            t.paymentMethod !== "TRANSFER" &&
+            t.date >= from &&
+            t.date <= to,
+        )
+        .map((t) => ({ amount: t.amount, type: t.type }));
+    },
   };
 };

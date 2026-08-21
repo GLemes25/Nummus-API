@@ -20,6 +20,8 @@ export const presentTransaction = (transaction: Transaction): TransactionRespons
   description: transaction.description,
   walletId: transaction.walletId,
   creditCardId: transaction.creditCardId,
+  installmentId: transaction.installmentId,
+  installmentNumber: transaction.installmentNumber,
   categoryId: transaction.categoryId,
   userId: transaction.userId,
   createdAt: transaction.createdAt,

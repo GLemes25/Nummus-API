@@ -208,6 +208,30 @@ describe("makeCreateTransactionUseCase — installments", () => {
     expect(p2!.installmentId).toBe(p3!.installmentId);
   });
 
+  it("should mark the first installment as COMPLETED and installments 2..N as PENDING", async () => {
+    // Arrange
+    const userId = faker.string.uuid();
+    const wallet = await walletRepo.create(makeFakeWallet({ userId, initialBalance: 1000 }));
+
+    // Act
+    await createTransaction({
+      userId,
+      walletId: wallet.id,
+      type: "EXPENSE",
+      paymentMethod: "CASH",
+      amount: 600,
+      date: new Date(2024, 7, 10),
+      description: "Sofá",
+      installments: 3,
+    });
+
+    // Assert
+    const [p1, p2, p3] = transactionRepo.items;
+    expect(p1!.status).toBe("COMPLETED");
+    expect(p2!.status).toBe("PENDING");
+    expect(p3!.status).toBe("PENDING");
+  });
+
   it("should skip months safely when date falls on the last day of a short month", async () => {
     // Arrange — Janeiro 31: +1 mês = Fevereiro (sem dia 31), deve ir para Feb 28
     const userId = faker.string.uuid();

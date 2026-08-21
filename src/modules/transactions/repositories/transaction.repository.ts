@@ -1,4 +1,4 @@
-import { PaymentMethod } from "@prisma/client";
+import { PaymentMethod, TransactionStatus } from "@prisma/client";
 
 import { prisma } from "../../../shared/lib/prisma.js";
 
@@ -6,6 +6,7 @@ type CreateTransactionData = {
   storedAmount: number;
   type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
   paymentMethod: Exclude<PaymentMethod, "CREDIT">;
+  status: TransactionStatus;
   date: Date;
   description: string;
   walletId: string;
@@ -17,6 +18,7 @@ type CreateTransactionData = {
 type CreateWithInvoiceData = {
   amount: number;
   type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
+  status: TransactionStatus;
   date: Date;
   description: string;
   creditCardId: string;
@@ -58,6 +60,7 @@ type CreateWalletInstallmentItem = {
   amount: number;
   type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
   paymentMethod: Exclude<PaymentMethod, "CREDIT">;
+  status: TransactionStatus;
   date: Date;
   description: string;
   walletId: string;
@@ -70,6 +73,7 @@ type CreateWalletInstallmentItem = {
 type CreateCreditInstallmentItem = {
   amount: number;
   type: "INCOME" | "EXPENSE" | "BALANCE_ADJUSTMENT";
+  status: TransactionStatus;
   date: Date;
   description: string;
   creditCardId: string;
@@ -129,7 +133,7 @@ export const transactionRepository = {
           amount: data.storedAmount,
           type: data.type,
           paymentMethod: data.paymentMethod,
-          status: "COMPLETED",
+          status: data.status,
           date: data.date,
           description: data.description,
           walletId: data.walletId,
@@ -138,10 +142,12 @@ export const transactionRepository = {
         },
       });
 
-      await tx.wallet.update({
-        where: { id: data.walletId },
-        data: { balance: data.newBalance },
-      });
+      if (data.status === "COMPLETED") {
+        await tx.wallet.update({
+          where: { id: data.walletId },
+          data: { balance: data.newBalance },
+        });
+      }
 
       return transaction;
     });
@@ -190,7 +196,11 @@ export const transactionRepository = {
 
       const transaction = await tx.transaction.findFirst({ where: { id: transactionId } });
 
-      if (transaction?.walletId && (transaction.type === "INCOME" || transaction.type === "EXPENSE")) {
+      if (
+        transaction?.walletId &&
+        transaction.status === "COMPLETED" &&
+        (transaction.type === "INCOME" || transaction.type === "EXPENSE")
+      ) {
         const balanceDelta =
           transaction.type === "INCOME"
             ? -Number(transaction.amount)
@@ -237,7 +247,7 @@ export const transactionRepository = {
           amount: data.amount,
           type: data.type,
           paymentMethod: "CREDIT",
-          status: "COMPLETED",
+          status: data.status,
           date: data.date,
           description: data.description,
           creditCardId: data.creditCardId,
@@ -257,10 +267,12 @@ export const transactionRepository = {
     firstInstallmentNewBalance: number
   ) => {
     return prisma.$transaction(async (tx) => {
-      await tx.wallet.update({
-        where: { id: walletId },
-        data: { balance: firstInstallmentNewBalance },
-      });
+      if (installments[0]?.status === "COMPLETED") {
+        await tx.wallet.update({
+          where: { id: walletId },
+          data: { balance: firstInstallmentNewBalance },
+        });
+      }
 
       const results = [];
       for (const item of installments) {
@@ -269,7 +281,7 @@ export const transactionRepository = {
             amount: item.amount,
             type: item.type,
             paymentMethod: item.paymentMethod,
-            status: "COMPLETED",
+            status: item.status,
             date: item.date,
             description: item.description,
             walletId: item.walletId,
@@ -322,7 +334,7 @@ export const transactionRepository = {
             amount: item.amount,
             type: item.type,
             paymentMethod: "CREDIT",
-            status: "COMPLETED",
+            status: item.status,
             date: item.date,
             description: item.description,
             creditCardId: item.creditCardId,
@@ -337,6 +349,29 @@ export const transactionRepository = {
       }
 
       return results[0]!;
+    });
+  },
+
+  realize: async (transactionId: string) => {
+    return prisma.transaction.update({
+      where: { id: transactionId },
+      data: { status: "COMPLETED" },
+    });
+  },
+
+  realizeWithBalanceUpdate: async (transactionId: string, walletId: string, newBalance: number) => {
+    return prisma.$transaction(async (tx) => {
+      const transaction = await tx.transaction.update({
+        where: { id: transactionId },
+        data: { status: "COMPLETED" },
+      });
+
+      await tx.wallet.update({
+        where: { id: walletId },
+        data: { balance: newBalance },
+      });
+
+      return transaction;
     });
   },
 };

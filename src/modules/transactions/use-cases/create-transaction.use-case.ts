@@ -65,6 +65,7 @@ export const makeCreateTransactionUseCase = (
     const installments = data.installments ?? 1;
     const installmentAmount = roundCents(data.amount / installments);
     const installmentId = installments > 1 ? randomUUID() : undefined;
+    const initialStatus = data.status ?? "COMPLETED";
 
     if (data.paymentMethod === "CREDIT") {
       const creditCard = await findCreditCard(data.creditCardId!);
@@ -93,6 +94,7 @@ export const makeCreateTransactionUseCase = (
           return {
             amount,
             type: data.type,
+            status: i === 0 ? initialStatus : "PENDING",
             date: installmentDate,
             description: `${data.description} (${i + 1}/${installments})`,
             creditCardId: data.creditCardId!,
@@ -118,6 +120,7 @@ export const makeCreateTransactionUseCase = (
       return repository.createWithInvoiceUpdate({
         amount: data.amount,
         type: data.type,
+        status: initialStatus,
         date: data.date,
         description: data.description,
         creditCardId: data.creditCardId!,
@@ -161,6 +164,7 @@ export const makeCreateTransactionUseCase = (
           amount,
           type: data.type,
           paymentMethod: data.paymentMethod as Exclude<typeof data.paymentMethod, "CREDIT">,
+          status: i === 0 ? initialStatus : "PENDING",
           date: addMonths(data.date, i),
           description: `${data.description} (${i + 1}/${installments})`,
           walletId: data.walletId!,
@@ -196,6 +200,7 @@ export const makeCreateTransactionUseCase = (
       storedAmount,
       type: data.type,
       paymentMethod: data.paymentMethod,
+      status: initialStatus,
       date: data.date,
       description: data.description,
       walletId: data.walletId!,

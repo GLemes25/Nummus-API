@@ -7,6 +7,7 @@ type TransactionInput = {
   amount: number;
   type: TransactionType;
   paymentMethod: PaymentMethod;
+  status?: "PENDING" | "COMPLETED" | "CANCELLED" | undefined;
   date: Date;
   description: string;
   walletId?: string | undefined;
