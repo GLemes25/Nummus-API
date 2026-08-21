@@ -46,15 +46,13 @@ export const makeUpdateTransactionUseCase = (
       walletDeltas.set(walletId, (walletDeltas.get(walletId) ?? 0) + delta);
     };
 
-    // Estorno: desfaz o impacto que a transação original causou na carteira antiga
-    if (transaction.type === "INCOME" || transaction.type === "EXPENSE") {
+    if (transaction.status === "COMPLETED" && (transaction.type === "INCOME" || transaction.type === "EXPENSE")) {
       const reversalDelta =
         transaction.type === "INCOME" ? -Number(transaction.amount) : Number(transaction.amount);
       addDelta(transaction.walletId, reversalDelta);
     }
 
-    // Aplicação: soma o impacto da transação já mesclada com os novos dados
-    if (resultingType === "INCOME" || resultingType === "EXPENSE") {
+    if (transaction.status === "COMPLETED" && (resultingType === "INCOME" || resultingType === "EXPENSE")) {
       const applyDelta = resultingType === "INCOME" ? resultingAmount : -resultingAmount;
       addDelta(resultingWalletId, applyDelta);
     }

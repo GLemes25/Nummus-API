@@ -12,6 +12,7 @@ import { makeCreateTransactionUseCase } from "../use-cases/create-transaction.us
 import { makeGetTransactionsUseCase } from "../use-cases/get-transactions.use-case.js";
 import { makeUpdateTransactionUseCase } from "../use-cases/update-transaction.use-case.js";
 import { makeDeleteTransactionUseCase } from "../use-cases/delete-transaction.use-case.js";
+import { makeRealizeTransactionUseCase } from "../use-cases/realize-transaction.use-case.js";
 import { presentTransaction, presentTransactionListItem } from "./presenters/transaction.presenter.js";
 
 type FindWallet = (id: string) => Promise<{ balance: { toNumber: () => number } } | null>;
@@ -35,6 +36,7 @@ export const transactionRoutes =
     const getTransactions = makeGetTransactionsUseCase(transactionRepository);
     const updateTransaction = makeUpdateTransactionUseCase(transactionRepository, deps.findWallet);
     const deleteTransaction = makeDeleteTransactionUseCase(transactionRepository);
+    const realizeTransaction = makeRealizeTransactionUseCase(transactionRepository, deps.findWallet);
 
     app.withTypeProvider<ZodTypeProvider>().route({
       method: "GET",
@@ -94,6 +96,29 @@ export const transactionRoutes =
           transactionId: request.params.id,
           userId: request.userId,
           data: request.body,
+        });
+        return reply.status(200).send(presentTransaction(transaction));
+      },
+    });
+
+    app.withTypeProvider<ZodTypeProvider>().route({
+      method: "PATCH",
+      url: "/:id/realize",
+      preHandler: [verifyAuth],
+      schema: {
+        tags: ["Transactions"],
+        params: z.object({ id: z.string() }),
+        response: {
+          200: transactionResponseSchema,
+          403: appErrorResponseSchema,
+          404: appErrorResponseSchema,
+          409: appErrorResponseSchema,
+        },
+      },
+      handler: async (request, reply) => {
+        const transaction = await realizeTransaction({
+          transactionId: request.params.id,
+          userId: request.userId,
         });
         return reply.status(200).send(presentTransaction(transaction));
       },

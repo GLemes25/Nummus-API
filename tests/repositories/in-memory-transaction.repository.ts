@@ -9,7 +9,7 @@ export type InMemoryTransaction = {
   amount: number;
   type: TransactionType;
   paymentMethod: PaymentMethod;
-  status: "PENDING" | "COMPLETED" | "CANCELLED";
+  status?: "PENDING" | "COMPLETED" | "CANCELLED";
   date: Date;
   description: string;
   walletId: string | null;
@@ -28,6 +28,7 @@ type CreateWithBalanceData = {
   storedAmount: number;
   type: TransactionType;
   paymentMethod: Exclude<PaymentMethod, "CREDIT">;
+  status?: "PENDING" | "COMPLETED" | "CANCELLED";
   date: Date;
   description: string;
   walletId: string;
@@ -67,6 +68,7 @@ type CreateWalletInstallmentItem = {
   amount: number;
   type: TransactionType;
   paymentMethod: Exclude<PaymentMethod, "CREDIT">;
+  status?: "PENDING" | "COMPLETED" | "CANCELLED";
   date: Date;
   description: string;
   walletId: string;
@@ -79,6 +81,7 @@ type CreateWalletInstallmentItem = {
 type CreateCreditInstallmentItem = {
   amount: number;
   type: TransactionType;
+  status?: "PENDING" | "COMPLETED" | "CANCELLED";
   date: Date;
   description: string;
   creditCardId: string;
@@ -107,6 +110,7 @@ export type InMemoryCreditCardInvoice = {
 type CreateWithInvoiceData = {
   amount: number;
   type: TransactionType;
+  status?: "PENDING" | "COMPLETED" | "CANCELLED";
   date: Date;
   description: string;
   creditCardId: string;
@@ -137,7 +141,7 @@ export const makeInMemoryTransactionRepository = (
         amount: data.storedAmount,
         type: data.type,
         paymentMethod: data.paymentMethod,
-        status: "COMPLETED",
+        status: data.status ?? "COMPLETED",
         date: data.date,
         description: data.description,
         walletId: data.walletId,
@@ -153,8 +157,10 @@ export const makeInMemoryTransactionRepository = (
       };
       items.push(transaction);
 
-      const wallet = wallets.find((w) => w.id === data.walletId);
-      if (wallet) wallet.balance = data.newBalance;
+      if ((data.status ?? "COMPLETED") === "COMPLETED") {
+        const wallet = wallets.find((w) => w.id === data.walletId);
+        if (wallet) wallet.balance = data.newBalance;
+      }
 
       return transaction;
     },
@@ -185,7 +191,11 @@ export const makeInMemoryTransactionRepository = (
 
       transaction.deletedAt = new Date();
 
-      if (transaction.walletId && (transaction.type === "INCOME" || transaction.type === "EXPENSE")) {
+      if (
+        transaction.walletId &&
+        transaction.status === "COMPLETED" &&
+        (transaction.type === "INCOME" || transaction.type === "EXPENSE")
+      ) {
         const wallet = wallets.find((w) => w.id === transaction.walletId);
         if (wallet) {
           const delta = transaction.type === "INCOME" ? -transaction.amount : transaction.amount;
@@ -255,7 +265,7 @@ export const makeInMemoryTransactionRepository = (
         amount: data.amount,
         type: data.type,
         paymentMethod: "CREDIT",
-        status: "COMPLETED",
+        status: data.status ?? "COMPLETED",
         date: data.date,
         description: data.description,
         walletId: null,
@@ -287,7 +297,7 @@ export const makeInMemoryTransactionRepository = (
           amount: item.amount,
           type: item.type,
           paymentMethod: item.paymentMethod,
-          status: "COMPLETED",
+          status: item.status ?? "COMPLETED",
           date: item.date,
           description: item.description,
           walletId: item.walletId,
@@ -305,8 +315,10 @@ export const makeInMemoryTransactionRepository = (
         created.push(transaction);
       }
 
-      const wallet = wallets.find((w) => w.id === walletId);
-      if (wallet) wallet.balance = firstInstallmentNewBalance;
+      if ((installmentItems[0]?.status ?? "COMPLETED") === "COMPLETED") {
+        const wallet = wallets.find((w) => w.id === walletId);
+        if (wallet) wallet.balance = firstInstallmentNewBalance;
+      }
 
       return created[0]!;
     },
@@ -347,7 +359,7 @@ export const makeInMemoryTransactionRepository = (
           amount: item.amount,
           type: item.type,
           paymentMethod: "CREDIT",
-          status: "COMPLETED",
+          status: item.status ?? "COMPLETED",
           date: item.date,
           description: item.description,
           walletId: null,
@@ -366,6 +378,29 @@ export const makeInMemoryTransactionRepository = (
       }
 
       return created[0]!;
+    },
+
+    realize: async (transactionId: string) => {
+      const transaction = items.find((t) => t.id === transactionId);
+      if (!transaction) return null;
+
+      transaction.status = "COMPLETED";
+      transaction.updatedAt = new Date();
+
+      return transaction;
+    },
+
+    realizeWithBalanceUpdate: async (transactionId: string, walletId: string, newBalance: number) => {
+      const transaction = items.find((t) => t.id === transactionId);
+      if (!transaction) return null;
+
+      transaction.status = "COMPLETED";
+      transaction.updatedAt = new Date();
+
+      const wallet = wallets.find((w) => w.id === walletId);
+      if (wallet) wallet.balance = newBalance;
+
+      return transaction;
     },
   };
 };

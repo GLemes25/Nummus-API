@@ -1,4 +1,4 @@
-import { PaymentMethod } from "@prisma/client";
+import { PaymentMethod, TransactionStatus } from "@prisma/client";
 import { z } from "zod";
 
 export const transactionBaseSchema = z.object({
@@ -21,39 +21,43 @@ export const transactionBaseSchema = z.object({
   installments: z.number().int().min(1).default(1).optional(),
 });
 
-export const createTransactionSchema = transactionBaseSchema.superRefine((data, ctx) => {
-  if (data.paymentMethod === PaymentMethod.CREDIT) {
-    if (!data.creditCardId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["creditCardId"],
-        message: "O cartão de crédito é obrigatório quando a forma de pagamento é CREDIT",
-      });
+export const createTransactionSchema = transactionBaseSchema
+  .extend({
+    status: z.nativeEnum(TransactionStatus, { error: "O status da transação é inválido" }).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.paymentMethod === PaymentMethod.CREDIT) {
+      if (!data.creditCardId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["creditCardId"],
+          message: "O cartão de crédito é obrigatório quando a forma de pagamento é CREDIT",
+        });
+      }
+      if (data.walletId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["walletId"],
+          message: "Uma transação de cartão de crédito não pode estar vinculada a uma carteira",
+        });
+      }
+    } else {
+      if (!data.walletId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["walletId"],
+          message: "A carteira é obrigatória para formas de pagamento que não sejam cartão de crédito",
+        });
+      }
+      if (data.creditCardId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["creditCardId"],
+          message: "Uma transação de carteira não pode estar vinculada a um cartão de crédito",
+        });
+      }
     }
-    if (data.walletId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["walletId"],
-        message: "Uma transação de cartão de crédito não pode estar vinculada a uma carteira",
-      });
-    }
-  } else {
-    if (!data.walletId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["walletId"],
-        message: "A carteira é obrigatória para formas de pagamento que não sejam cartão de crédito",
-      });
-    }
-    if (data.creditCardId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["creditCardId"],
-        message: "Uma transação de carteira não pode estar vinculada a um cartão de crédito",
-      });
-    }
-  }
-});
+  });
 
 export type CreateTransactionDto = z.infer<typeof createTransactionSchema>;
 
