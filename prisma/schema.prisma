@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  // debian-openssl-1.1.x garante um query engine baixável em ambientes onde o binário nativo (ex: NixOS) não está pré-compilado
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
