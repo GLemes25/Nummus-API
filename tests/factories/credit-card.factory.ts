@@ -5,6 +5,7 @@ type CreditCardInput = {
   limit: number;
   closingDay: number;
   dueDay: number;
+  walletId?: string;
   userId: string;
 };
 

@@ -3,6 +3,8 @@ import type { creditCardRepository } from "../repositories/credit-card.repositor
 import type { UpdateCreditCardDto } from "../dtos/update-credit-card.dto.js";
 
 type CreditCardRepository = typeof creditCardRepository;
+type WalletSnapshot = { userId: string };
+type FindWallet = (id: string) => Promise<WalletSnapshot | null>;
 
 type UpdateCreditCardInput = {
   creditCardId: string;
@@ -10,7 +12,10 @@ type UpdateCreditCardInput = {
   data: UpdateCreditCardDto;
 };
 
-export const makeUpdateCreditCardUseCase = (repository: CreditCardRepository) => {
+export const makeUpdateCreditCardUseCase = (
+  repository: CreditCardRepository,
+  findWallet: FindWallet,
+) => {
   return async ({ creditCardId, userId, data }: UpdateCreditCardInput) => {
     const creditCard = await repository.findById(creditCardId);
 
@@ -37,6 +42,26 @@ export const makeUpdateCreditCardUseCase = (repository: CreditCardRepository) =>
           code: "CREDIT_CARD_ALREADY_EXISTS",
           message: "Já existe um cartão de crédito com este nome",
           statusCode: 409,
+        });
+      }
+    }
+
+    if (data.walletId !== undefined) {
+      const wallet = await findWallet(data.walletId);
+
+      if (!wallet) {
+        throw makeAppError({
+          code: "WALLET_NOT_FOUND",
+          message: "Carteira não encontrada",
+          statusCode: 404,
+        });
+      }
+
+      if (wallet.userId !== userId) {
+        throw makeAppError({
+          code: "WALLET_ACCESS_DENIED",
+          message: "Você não tem permissão para vincular esta carteira",
+          statusCode: 403,
         });
       }
     }

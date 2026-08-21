@@ -17,6 +17,10 @@ export const createCreditCardSchema = z.object({
     .int("O dia de vencimento deve ser um número inteiro")
     .min(1, "O dia de vencimento deve estar entre 1 e 28")
     .max(28, "O dia de vencimento deve estar entre 1 e 28"),
+  walletId: z
+    .string({ error: "O ID da carteira deve ser um texto válido" })
+    .uuid("O ID da carteira deve ser um UUID válido")
+    .optional(),
 });
 
 export type CreateCreditCardDto = z.infer<typeof createCreditCardSchema>;
@@ -27,6 +31,7 @@ export const creditCardResponseSchema = z.object({
   limit: z.number(),
   closingDay: z.number(),
   dueDay: z.number(),
+  walletId: z.string().nullable(),
   currentInvoiceAmount: z.number(),
   userId: z.string(),
   createdAt: z.date(),

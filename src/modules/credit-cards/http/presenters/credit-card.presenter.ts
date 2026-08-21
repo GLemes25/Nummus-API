@@ -11,6 +11,7 @@ export const presentCreditCard = (
   limit: Number(creditCard.limit),
   closingDay: creditCard.closingDay,
   dueDay: creditCard.dueDay,
+  walletId: creditCard.walletId,
   currentInvoiceAmount,
   userId: creditCard.userId,
   createdAt: creditCard.createdAt,

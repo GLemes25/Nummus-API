@@ -7,6 +7,7 @@ type InMemoryCreditCard = {
   limit: number;
   closingDay: number;
   dueDay: number;
+  walletId: string | null;
   userId: string;
   deletedAt: Date | null;
   createdAt: Date;
@@ -26,6 +27,7 @@ type UpdateCreditCardData = {
   limit?: number;
   closingDay?: number;
   dueDay?: number;
+  walletId?: string;
 };
 
 export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => {
@@ -56,13 +58,21 @@ export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => 
         }));
     },
 
-    create: async (data: { name: string; limit: number; closingDay: number; dueDay: number; userId: string }) => {
+    create: async (data: {
+      name: string;
+      limit: number;
+      closingDay: number;
+      dueDay: number;
+      walletId?: string;
+      userId: string;
+    }) => {
       const card: InMemoryCreditCard = {
         id: randomUUID(),
         name: data.name,
         limit: data.limit,
         closingDay: data.closingDay,
         dueDay: data.dueDay,
+        walletId: data.walletId ?? null,
         userId: data.userId,
         deletedAt: null,
         createdAt: new Date(),
@@ -79,6 +89,7 @@ export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => 
       if (data.limit !== undefined) card.limit = data.limit;
       if (data.closingDay !== undefined) card.closingDay = data.closingDay;
       if (data.dueDay !== undefined) card.dueDay = data.dueDay;
+      if (data.walletId !== undefined) card.walletId = data.walletId;
       card.updatedAt = new Date();
       return card;
     },
