@@ -30,7 +30,7 @@ export const creditCardRepository = {
     return prisma.creditCard.create({
       data: {
         name: data.name,
-        limit: data.limit,
+        limit: data.creditLimit,
         closingDay: data.closingDay,
         dueDay: data.dueDay,
         walletId: data.walletId ?? null,
@@ -44,7 +44,7 @@ export const creditCardRepository = {
       where: { id },
       data: {
         ...(data.name !== undefined ? { name: data.name } : {}),
-        ...(data.limit !== undefined ? { limit: data.limit } : {}),
+        ...(data.creditLimit !== undefined ? { limit: data.creditLimit } : {}),
         ...(data.closingDay !== undefined ? { closingDay: data.closingDay } : {}),
         ...(data.dueDay !== undefined ? { dueDay: data.dueDay } : {}),
         ...(data.walletId !== undefined ? { walletId: data.walletId } : {}),

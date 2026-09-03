@@ -38,7 +38,7 @@ describe("update-credit-card use case", () => {
     const result = await updateCreditCard({
       creditCardId: created.id,
       userId: input.userId,
-      data: { limit: 5000, closingDay: 10, dueDay: 20 },
+      data: { creditLimit: 5000, closingDay: 10, dueDay: 20 },
     });
 
     // Assert

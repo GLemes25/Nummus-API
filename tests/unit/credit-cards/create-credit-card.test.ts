@@ -20,7 +20,7 @@ describe("makeCreateCreditCardUseCase", () => {
 
     // Assert
     expect(card.name).toBe(input.name);
-    expect(card.limit).toBe(input.limit);
+    expect(card.limit).toBe(input.creditLimit);
     expect(card.closingDay).toBe(input.closingDay);
     expect(card.dueDay).toBe(input.dueDay);
     expect(card.userId).toBe(userId);
