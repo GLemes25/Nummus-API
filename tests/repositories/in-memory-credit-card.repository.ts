@@ -24,7 +24,7 @@ type InMemoryCreditCardInvoice = {
 
 type UpdateCreditCardData = {
   name?: string;
-  limit?: number;
+  creditLimit?: number;
   closingDay?: number;
   dueDay?: number;
   walletId?: string;
@@ -60,7 +60,7 @@ export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => 
 
     create: async (data: {
       name: string;
-      limit: number;
+      creditLimit: number;
       closingDay: number;
       dueDay: number;
       walletId?: string;
@@ -69,7 +69,7 @@ export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => 
       const card: InMemoryCreditCard = {
         id: randomUUID(),
         name: data.name,
-        limit: data.limit,
+        limit: data.creditLimit,
         closingDay: data.closingDay,
         dueDay: data.dueDay,
         walletId: data.walletId ?? null,
@@ -86,7 +86,7 @@ export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => 
       const card = items.find((c) => c.id === id && c.deletedAt === null);
       if (!card) return null;
       if (data.name !== undefined) card.name = data.name;
-      if (data.limit !== undefined) card.limit = data.limit;
+      if (data.creditLimit !== undefined) card.limit = data.creditLimit;
       if (data.closingDay !== undefined) card.closingDay = data.closingDay;
       if (data.dueDay !== undefined) card.dueDay = data.dueDay;
       if (data.walletId !== undefined) card.walletId = data.walletId;

@@ -8,7 +8,7 @@ export const presentCreditCard = (
 ): CreditCardResponseDto => ({
   id: creditCard.id,
   name: creditCard.name,
-  limit: Number(creditCard.limit),
+  creditLimit: Number(creditCard.limit),
   closingDay: creditCard.closingDay,
   dueDay: creditCard.dueDay,
   walletId: creditCard.walletId,

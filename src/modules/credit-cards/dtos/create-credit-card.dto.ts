@@ -4,7 +4,7 @@ export const createCreditCardSchema = z.object({
   name: z
     .string({ error: "O nome do cartão de crédito é obrigatório" })
     .min(1, "O nome do cartão de crédito é obrigatório"),
-  limit: z
+  creditLimit: z
     .number({ error: "O limite deve ser um número válido" })
     .positive("O limite deve ser maior que zero"),
   closingDay: z
@@ -28,7 +28,7 @@ export type CreateCreditCardDto = z.infer<typeof createCreditCardSchema>;
 export const creditCardResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  limit: z.number(),
+  creditLimit: z.number(),
   closingDay: z.number(),
   dueDay: z.number(),
   walletId: z.string().nullable(),
