@@ -22,6 +22,13 @@ type InMemoryCreditCardInvoice = {
   deletedAt: Date | null;
 };
 
+type InMemoryPaymentTransaction = {
+  walletId: string;
+  amount: number;
+  categoryId: string;
+  userId: string;
+};
+
 type UpdateCreditCardData = {
   name?: string;
   creditLimit?: number;
@@ -33,10 +40,12 @@ type UpdateCreditCardData = {
 export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => {
   const items: InMemoryCreditCard[] = [];
   const invoices: InMemoryCreditCardInvoice[] = [];
+  const paymentTransactions: InMemoryPaymentTransaction[] = [];
 
   return {
     items,
     invoices,
+    paymentTransactions,
 
     findByNameAndUser: async (userId: string, name: string) => {
       return items.find((c) => c.userId === userId && c.name === name && c.deletedAt === null) ?? null;
@@ -109,7 +118,8 @@ export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => 
       creditCardId: string,
       walletId: string,
       totalAmount: number,
-      _userId: string,
+      userId: string,
+      categoryId: string,
     ) => {
       invoices
         .filter((i) => i.creditCardId === creditCardId && !i.paid && i.deletedAt === null)
@@ -121,6 +131,8 @@ export const makeInMemoryCreditCardRepository = (wallets?: InMemoryWallet[]) => 
         const wallet = wallets.find((w) => w.id === walletId);
         if (wallet) wallet.balance -= totalAmount;
       }
+
+      paymentTransactions.push({ walletId, amount: totalAmount, categoryId, userId });
     },
   };
 };

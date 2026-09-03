@@ -5,6 +5,14 @@ import type { UpdateCategoryDto } from "../dtos/update-category.dto.js";
 
 type CreateCategoryInput = CreateCategoryDto & { userId: string };
 
+type CreateSystemCategoryInput = {
+  userId: string;
+  systemId: string;
+  name: string;
+  icon: string;
+  color: string;
+};
+
 export const categoryRepository = {
   findByNameAndParent: async (
     userId: string,
@@ -18,6 +26,12 @@ export const categoryRepository = {
 
   findById: async (id: string) => {
     return prisma.category.findFirst({ where: { id, deletedAt: null } });
+  },
+
+  findBySystemId: async (userId: string, systemId: string) => {
+    return prisma.category.findFirst({
+      where: { userId, systemId, deletedAt: null },
+    });
   },
 
   findManyByUser: async (userId: string) => {
@@ -47,6 +61,26 @@ export const categoryRepository = {
         ...(data.color !== undefined ? { color: data.color } : {}),
         ...(data.icon !== undefined ? { icon: data.icon } : {}),
         ...(data.parentId !== undefined ? { parentId: data.parentId } : {}),
+      },
+    });
+  },
+
+  softDelete: async (id: string) => {
+    await prisma.category.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  },
+
+  createSystemCategory: async (data: CreateSystemCategoryInput) => {
+    return prisma.category.create({
+      data: {
+        name: data.name,
+        color: data.color,
+        icon: data.icon,
+        userId: data.userId,
+        systemId: data.systemId,
+        isSystem: true,
       },
     });
   },

@@ -8,6 +8,8 @@ export const presentCategory = (category: Category): CategoryResponseDto => ({
   color: category.color,
   icon: category.icon,
   parentId: category.parentId,
+  isSystem: category.isSystem,
+  systemId: category.systemId,
   userId: category.userId,
   createdAt: category.createdAt,
   updatedAt: category.updatedAt,

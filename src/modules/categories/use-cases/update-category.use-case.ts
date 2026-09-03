@@ -30,6 +30,14 @@ export const makeUpdateCategoryUseCase = (repository: CategoryRepository) => {
       });
     }
 
+    if (category.isSystem) {
+      throw makeAppError({
+        code: "CATEGORY_SYSTEM_IMMUTABLE",
+        message: "Categorias do sistema não podem ser alteradas",
+        statusCode: 403,
+      });
+    }
+
     if (data.name !== undefined || data.parentId !== undefined) {
       const resultingName = data.name ?? category.name;
       const resultingParentId = data.parentId !== undefined ? data.parentId : (category.parentId ?? undefined);
