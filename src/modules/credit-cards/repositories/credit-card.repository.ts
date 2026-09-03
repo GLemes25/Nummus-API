@@ -70,6 +70,7 @@ export const creditCardRepository = {
     walletId: string,
     totalAmount: number,
     userId: string,
+    categoryId: string,
   ) => {
     return prisma.$transaction(async (tx) => {
       await tx.creditCardInvoice.updateMany({
@@ -91,6 +92,7 @@ export const creditCardRepository = {
           date: new Date(),
           description: "Pagamento de fatura de cartão de crédito",
           walletId,
+          categoryId,
           userId,
         },
       });

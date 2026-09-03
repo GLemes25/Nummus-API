@@ -17,19 +17,38 @@ import { presentCreditCard } from "./presenters/credit-card.presenter.js";
 
 type WalletSnapshot = { balance: { toNumber: () => number }; userId: string };
 type FindWallet = (id: string) => Promise<WalletSnapshot | null>;
+type CategorySnapshot = { id: string };
+type FindCategoryBySystemId = (
+  userId: string,
+  systemId: string,
+) => Promise<CategorySnapshot | null>;
+type CreateSystemCategory = (data: {
+  userId: string;
+  systemId: string;
+  name: string;
+  icon: string;
+  color: string;
+}) => Promise<CategorySnapshot>;
 
 type CreditCardRouteDeps = {
   findWallet: FindWallet;
+  findCategoryBySystemId: FindCategoryBySystemId;
+  createSystemCategory: CreateSystemCategory;
 };
 
 export const creditCardRoutes =
-  ({ findWallet }: CreditCardRouteDeps) =>
+  ({ findWallet, findCategoryBySystemId, createSystemCategory }: CreditCardRouteDeps) =>
   async (app: FastifyInstance) => {
     const createCreditCard = makeCreateCreditCardUseCase(creditCardRepository, findWallet);
     const getCreditCards = makeGetCreditCardsUseCase(creditCardRepository);
     const updateCreditCard = makeUpdateCreditCardUseCase(creditCardRepository, findWallet);
     const deleteCreditCard = makeDeleteCreditCardUseCase(creditCardRepository);
-    const payInvoice = makePayInvoiceUseCase(creditCardRepository, findWallet);
+    const payInvoice = makePayInvoiceUseCase(
+      creditCardRepository,
+      findWallet,
+      findCategoryBySystemId,
+      createSystemCategory,
+    );
 
     app.withTypeProvider<ZodTypeProvider>().route({
       method: "GET",

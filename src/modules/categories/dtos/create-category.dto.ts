@@ -21,6 +21,8 @@ export const categoryResponseSchema = z.object({
   color: z.string(),
   icon: z.string(),
   parentId: z.string().nullable(),
+  isSystem: z.boolean(),
+  systemId: z.string().nullable(),
   userId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),

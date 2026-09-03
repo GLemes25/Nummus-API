@@ -73,6 +73,25 @@ describe("makeUpdateCategoryUseCase", () => {
     });
   });
 
+  it("should throw CATEGORY_SYSTEM_IMMUTABLE when trying to update a system category", async () => {
+    // Arrange
+    const repo = makeInMemoryCategoryRepository();
+    const updateCategory = makeUpdateCategoryUseCase(repo as any);
+    const userId = faker.string.uuid();
+    const category = await repo.create(
+      makeFakeCategory({ userId, isSystem: true, systemId: "CREDIT_CARD_PAYMENT" })
+    );
+
+    // Act & Assert
+    await expect(
+      updateCategory({ categoryId: category.id, userId, data: { name: "Renamed" } })
+    ).rejects.toMatchObject({
+      code: "CATEGORY_SYSTEM_IMMUTABLE",
+      message: "Categorias do sistema não podem ser alteradas",
+      statusCode: 403,
+    });
+  });
+
   it("should allow moving a category to a different parent even with a duplicate name at the previous level", async () => {
     // Arrange
     const repo = makeInMemoryCategoryRepository();

@@ -6,6 +6,8 @@ type CategoryInput = {
   icon: string;
   parentId?: string;
   userId: string;
+  isSystem?: boolean;
+  systemId?: string;
 };
 
 export const makeFakeCategory = (overrides: Partial<CategoryInput> = {}): CategoryInput => ({

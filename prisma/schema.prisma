@@ -243,6 +243,8 @@ model Category {
   icon      String
   parentId  String?
   parent    Category? @relation("CategoryToSubCategory", fields: [parentId], references: [id])
+  isSystem  Boolean   @default(false)
+  systemId  String?
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
@@ -258,6 +260,9 @@ model Category {
   // Nota: PostgreSQL trata NULL como distinto, então categorias raiz com mesmo nome
   // precisam de validação adicional na camada de aplicação
   @@unique([userId, name, parentId])
+  // Garante uma única categoria de sistema por tipo (systemId) por usuário
+  // NULL é distinto em PostgreSQL, então categorias comuns (systemId null) não são afetadas
+  @@unique([userId, systemId])
   @@index([userId])
   @@index([userId, parentId])
   @@index([userId, deletedAt])

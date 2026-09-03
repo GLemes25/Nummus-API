@@ -116,7 +116,14 @@ export const buildApp = async () => {
   await app.register(metricsRoutes, { prefix: "/metrics" });
   await app.register(costCenterRoutes, { prefix: "/cost-centers" });
   await app.register(tagRoutes, { prefix: "/tags" });
-  await app.register(creditCardRoutes({ findWallet: walletRepository.findById }), { prefix: "/credit-cards" });
+  await app.register(
+    creditCardRoutes({
+      findWallet: walletRepository.findById,
+      findCategoryBySystemId: categoryRepository.findBySystemId,
+      createSystemCategory: categoryRepository.createSystemCategory,
+    }),
+    { prefix: "/credit-cards" },
+  );
   await app.register(transferRoutes, { prefix: "/transfers" });
   await app.register(
     transactionRoutes({

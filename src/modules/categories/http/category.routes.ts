@@ -10,12 +10,14 @@ import { categoryRepository } from "../repositories/category.repository.js";
 import { makeCreateCategoryUseCase } from "../use-cases/create-category.use-case.js";
 import { makeGetCategoriesUseCase } from "../use-cases/get-categories.use-case.js";
 import { makeUpdateCategoryUseCase } from "../use-cases/update-category.use-case.js";
+import { makeDeleteCategoryUseCase } from "../use-cases/delete-category.use-case.js";
 import { presentCategory } from "./presenters/category.presenter.js";
 
 export const categoryRoutes = async (app: FastifyInstance) => {
   const createCategory = makeCreateCategoryUseCase(categoryRepository);
   const getCategories = makeGetCategoriesUseCase(categoryRepository);
   const updateCategory = makeUpdateCategoryUseCase(categoryRepository);
+  const deleteCategory = makeDeleteCategoryUseCase(categoryRepository);
 
   app.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",
@@ -75,6 +77,25 @@ export const categoryRoutes = async (app: FastifyInstance) => {
         data: request.body,
       });
       return reply.status(200).send(presentCategory(category));
+    },
+  });
+
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: "DELETE",
+    url: "/:id",
+    preHandler: [verifyAuth],
+    schema: {
+      tags: ["Categories"],
+      params: z.object({ id: z.string() }),
+      response: {
+        204: z.void(),
+        403: appErrorResponseSchema,
+        404: appErrorResponseSchema,
+      },
+    },
+    handler: async (request, reply) => {
+      await deleteCategory({ categoryId: request.params.id, userId: request.userId });
+      return reply.status(204).send();
     },
   });
 };
