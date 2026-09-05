@@ -358,6 +358,9 @@ model Transaction {
   costCenterId      String?
   costCenter        CostCenter?        @relation(fields: [costCenterId], references: [id])
 
+  recurringTransactionId String?
+  recurringTransaction   RecurringTransaction? @relation(fields: [recurringTransactionId], references: [id])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -379,6 +382,7 @@ model Transaction {
   @@index([invoiceId]) // transações de uma fatura
   @@index([installmentId]) // agrupa parcelas de um parcelamento
   @@index([installmentPlanId]) // parcelas de um plano
+  @@index([recurringTransactionId]) // ocorrências geradas por um mestre recorrente
   @@index([date]) // consultas analíticas por data
   @@map("transactions")
 }
@@ -404,6 +408,7 @@ model RecurringTransaction {
   description       String
   amount            Decimal            @db.Decimal(12, 2)
   type              TransactionType
+  paymentMethod     PaymentMethod      @default(PIX)
   frequency         RecurringFrequency
   nextExecutionDate DateTime
   active            Boolean            @default(true)
@@ -416,6 +421,8 @@ model RecurringTransaction {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   deletedAt         DateTime?
+
+  transactions Transaction[]
 
   // Índice para o job do scheduler que busca transações a executar
   @@index([nextExecutionDate])
