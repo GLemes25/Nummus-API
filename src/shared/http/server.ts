@@ -18,6 +18,7 @@ import { costCenterRoutes } from "../../modules/cost-centers/http/cost-center.ro
 import { creditCardRoutes } from "../../modules/credit-cards/http/credit-card.routes.js";
 import { creditCardRepository } from "../../modules/credit-cards/repositories/credit-card.repository.js";
 import { metricsRoutes } from "../../modules/metrics/http/metrics.routes.js";
+import { recurringTransactionRoutes } from "../../modules/recurring-transactions/http/recurring-transaction.routes.js";
 import { tagRoutes } from "../../modules/tags/http/tag.routes.js";
 import { transactionRoutes } from "../../modules/transactions/http/transaction.routes.js";
 import { transferRoutes } from "../../modules/transfers/http/transfer.routes.js";
@@ -132,6 +133,13 @@ export const buildApp = async () => {
       findCreditCard: creditCardRepository.findById,
     }),
     { prefix: "/transactions" },
+  );
+  await app.register(
+    recurringTransactionRoutes({
+      findWallet: walletRepository.findById,
+      findCategory: categoryRepository.findById,
+    }),
+    { prefix: "/recurring-transactions" },
   );
 
   app.withTypeProvider<ZodTypeProvider>().route({
