@@ -12,10 +12,8 @@ export const createTransferSchema = z.object({
     .positive("O valor deve ser maior que zero")
     .min(0.01, "O valor mínimo é 0,01"),
   date: z.coerce.date({ error: "A data informada é inválida" }),
-  description: z.string().optional(),
-  categoryId: z
-    .string({ error: "A categoria é obrigatória" })
-    .min(1, "A categoria é obrigatória"),
+  description: z.string().optional().nullable(),
+  categoryId: z.string().min(1, "O identificador da categoria é inválido").optional().nullable(),
 });
 
 export type CreateTransferDto = z.infer<typeof createTransferSchema>;

@@ -6,8 +6,8 @@ type CreateTransferInput = {
   destinationWalletId: string;
   amount: number;
   date: Date;
-  description?: string;
-  categoryId: string;
+  description: string | null;
+  categoryId: string | null;
   userId: string;
 };
 
