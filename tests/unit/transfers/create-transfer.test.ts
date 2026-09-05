@@ -95,7 +95,7 @@ describe("makeCreateTransferUseCase", () => {
     });
   });
 
-  it("should persist the optional description in the transfer record", async () => {
+  it("should nullify category and description for transfers regardless of input", async () => {
     // Arrange
     const userId = faker.string.uuid();
     const source = await walletRepo.create(makeFakeWallet({ userId, initialBalance: 500 }));
@@ -113,6 +113,6 @@ describe("makeCreateTransferUseCase", () => {
     );
 
     // Assert
-    expect(transfer.description).toBe("Rent split");
+    expect(transfer.description).toBeNull();
   });
 });

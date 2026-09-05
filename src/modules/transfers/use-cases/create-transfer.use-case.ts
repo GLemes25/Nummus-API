@@ -15,14 +15,15 @@ export const makeCreateTransferUseCase = (repository: TransferRepository) => {
       });
     }
 
+    // Transferências entre carteiras próprias não afetam o fluxo de caixa por categoria e não necessitam de notas
     return repository.create({
       sourceWalletId: data.sourceWalletId,
       destinationWalletId: data.destinationWalletId,
       amount: data.amount,
       date: data.date,
-      categoryId: data.categoryId,
+      categoryId: null,
+      description: null,
       userId: data.userId,
-      ...(data.description !== undefined ? { description: data.description } : {}),
     });
   };
 };
